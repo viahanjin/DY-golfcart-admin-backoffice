@@ -19,7 +19,7 @@
 			capabilities: {
 				supportedModes: ['manual'],
 				maxSpeed: 15,
-				battery: { type: 'Li-ion', capacity: '', expectedHours: 0 }
+				battery: { type: 'Li-ion', capacity: '10kWh', expectedHours: 8 }
 			},
 			network: { macAddress: '', ip: '', isStatic: false },
 			mqtt: { clientId: '', qos: 1 },
@@ -33,6 +33,15 @@
 
 	let formData = getInitialFormData();
 	$: isReadOnly = modalMode === 'view';
+
+	// 하드웨어 선택에 따른 운행모드 자동 계산
+	$: {
+		const modes = ['manual'];
+		if (formData.hardware.vcu) modes.push('auto');
+		if (formData.hardware.vpu) modes.push('safety');
+		if (formData.hardware.acu) modes.push('autonomous');
+		formData.capabilities.supportedModes = modes;
+	}
 
 	onMount(() => {
 		if (selectedCart && (modalMode === 'edit' || modalMode === 'view')) {
@@ -105,6 +114,10 @@
 							<label for="hw-{key}" class="uppercase dark:text-gray-300">{key}</label>
 						</div>
 					{/each}
+					<div class="mt-2 text-sm">
+						<span class="font-semibold">지원 운행 모드:</span>
+						<span class="text-blue-600 dark:text-blue-400">{formData.capabilities.supportedModes.join(', ')}</span>
+					</div>
 				</div>
 				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
 					<h3 class="font-semibold dark:text-white">센서 구성</h3>
@@ -117,20 +130,21 @@
 				</div>
 			</div>
 
-			<!-- 상태 및 점검 -->
+			<!-- 성능 사양 -->
 			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-				<h3 class="font-semibold dark:text-white">카트 상태</h3>
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-					<div><label for="currentState" class="dark:text-gray-300">현재 상태</label>
-						<select id="currentState" bind:value={formData.cartStatus.currentState} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-							<option value="available">운행 가능</option>
-							<option value="maintenance">정비 중</option>
-							<option value="broken">고장/수리</option>
-							<option value="unavailable">미사용</option>
-						</select>
-					</div>
-					<div><label for="lastInspection" class="dark:text-gray-300">마지막 점검일</label><input id="lastInspection" type="date" bind:value={formData.cartStatus.lastInspection} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-					<div><label for="nextInspection" class="dark:text-gray-300">다음 정비 예정일</label><input id="nextInspection" type="date" bind:value={formData.cartStatus.nextInspection} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				<h3 class="font-semibold dark:text-white">성능 사양</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div><label for="maxSpeed" class="dark:text-gray-300">최대 운행 속도 (km/h)</label><input id="maxSpeed" type="number" bind:value={formData.capabilities.maxSpeed} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+					<div><label for="batteryCapacity" class="dark:text-gray-300">배터리 용량 (kWh)</label><input id="batteryCapacity" type="text" bind:value={formData.capabilities.battery.capacity} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				</div>
+			</div>
+
+			<!-- 통신 설정 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold dark:text-white">통신 설정</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div><label for="macAddress" class="dark:text-gray-300">MAC 주소</label><input id="macAddress" type="text" bind:value={formData.network.macAddress} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+					<div><label for="clientId" class="dark:text-gray-300">MQTT Client ID</label><input id="clientId" type="text" bind:value={formData.mqtt.clientId} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
 				</div>
 			</div>
 		</div>

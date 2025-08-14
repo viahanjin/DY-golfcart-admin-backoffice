@@ -118,93 +118,81 @@
 		</div>
 
 		<!-- 모달 내용 -->
-		<div class="space-y-6 p-6">
-			<!-- 기본 정보 섹션 -->
-			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-				<h3 class="font-semibold text-gray-900 dark:text-white">기본 정보</h3>
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<div>
-						<label for="courseName" class="mb-2 block text-sm font-medium dark:text-gray-300">골프장명 (한글) *</label>
-						<input id="courseName" type="text" bind:value={formData.courseName} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+		<div class="p-6">
+			{#if modalMode === 'view'}
+				<div class="border-b border-gray-200 dark:border-gray-600">
+					<nav class="-mb-px flex space-x-8" aria-label="Tabs">
+						<button class="whitespace-nowrap border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600">기본정보</button>
+						<button class="whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">카트현황</button>
+						<button class="whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">코스정보</button>
+					</nav>
+				</div>
+			{/if}
+			<div class="space-y-6 pt-6">
+				<!-- 기본 정보 섹션 -->
+				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+					<h3 class="font-semibold text-gray-900 dark:text-white">기본 정보</h3>
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<div class="col-span-2">
+							<label for="courseName" class="mb-2 block text-sm font-medium dark:text-gray-300">골프장명 (한글) *</label>
+							<div class="flex gap-2"><input id="courseName" type="text" bind:value={formData.courseName} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /><button class="btn-secondary whitespace-nowrap">중복 검사</button></div>
+						</div>
+						<div class="col-span-2"><label for="courseNameEn" class="mb-2 block text-sm font-medium dark:text-gray-300">골프장명 (영문)</label><input id="courseNameEn" type="text" bind:value={formData.courseNameEn} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+						<div class="col-span-2">
+							<label for="courseCode" class="mb-2 block text-sm font-medium dark:text-gray-300">골프장 코드 *</label>
+							<div class="flex gap-2"><input id="courseCode" type="text" bind:value={formData.courseCode} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /><button class="btn-secondary whitespace-nowrap">자동 생성</button></div>
+						</div>
+						<div><label for="phone" class="mb-2 block text-sm font-medium dark:text-gray-300">대표 전화번호 *</label><input id="phone" type="tel" bind:value={formData.contact.phone} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+						<div><label for="email" class="mb-2 block text-sm font-medium dark:text-gray-300">이메일 *</label><input id="email" type="email" bind:value={formData.contact.email} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
 					</div>
-					<div>
-						<label for="courseNameEn" class="mb-2 block text-sm font-medium dark:text-gray-300">골프장명 (영문)</label>
-						<input id="courseNameEn" type="text" bind:value={formData.courseNameEn} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+				</div>
+
+				<!-- 주소 및 위치 섹션 -->
+				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+					<h3 class="font-semibold text-gray-900 dark:text-white">주소 및 위치</h3>
+					<div class="flex gap-2">
+						<input type="text" placeholder="우편번호" bind:value={formData.address.zipcode} disabled={isReadOnly} class="w-1/3 rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+						<button class="btn-secondary">우편번호 찾기</button>
 					</div>
+					<input type="text" placeholder="주소" bind:value={formData.address.address1} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+					<input type="text" placeholder="상세주소" bind:value={formData.address.address2} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<input type="number" placeholder="위도 (Latitude)" bind:value={formData.location.latitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+						<input type="number" placeholder="경도 (Longitude)" bind:value={formData.location.longitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+					</div>
+					<button class="btn-secondary w-full">지도에서 위치 선택 (TODO)</button>
 				</div>
-				<div>
-					<label for="courseCode" class="mb-2 block text-sm font-medium dark:text-gray-300">골프장 코드 *</label>
-					<input id="courseCode" type="text" bind:value={formData.courseCode} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-				</div>
-				<!-- 주소 -->
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-					<input type="text" placeholder="우편번호" bind:value={formData.address.zipcode} disabled={isReadOnly} class="md:col-span-1 w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<input type="text" placeholder="주소" bind:value={formData.address.address1} disabled={isReadOnly} class="md:col-span-2 w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<input type="text" placeholder="상세주소" bind:value={formData.address.address2} disabled={isReadOnly} class="md:col-span-3 w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-				</div>
-				<!-- 연락처 -->
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<input type="tel" placeholder="대표 전화번호" bind:value={formData.contact.phone} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<input type="email" placeholder="대표 이메일" bind:value={formData.contact.email} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-				</div>
-			</div>
 
-			<!-- 위치 정보 섹션 -->
-			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-				<h3 class="font-semibold text-gray-900 dark:text-white">위치 정보</h3>
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-					<input type="number" placeholder="위도 (Latitude)" bind:value={formData.location.latitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<input type="number" placeholder="경도 (Longitude)" bind:value={formData.location.longitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<input type="number" placeholder="고도 (Altitude)" bind:value={formData.location.altitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-				</div>
-				<div>
-					<label for="coordinateSystem" class="mb-2 block text-sm font-medium dark:text-gray-300">좌표계</label>
-					<select id="coordinateSystem" bind:value={formData.location.coordinateSystem} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-						<option value="WGS84">WGS84</option>
-						<option value="UTM-K">UTM-K</option>
-					</select>
-				</div>
-			</div>
-
-			<!-- 운영 정보 섹션 -->
-			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-				<h3 class="font-semibold text-gray-900 dark:text-white">운영 정보</h3>
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<!-- 운영 정보 섹션 -->
+				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+					<h3 class="font-semibold text-gray-900 dark:text-white">운영 정보</h3>
 					<div>
 						<label for="totalHoles" class="mb-2 block text-sm font-medium dark:text-gray-300">홀 수</label>
 						<select id="totalHoles" bind:value={formData.operation.totalHoles} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-							<option value={9}>9홀</option>
-							<option value={18}>18홀</option>
-							<option value={27}>27홀</option>
-							<option value={36}>36홀</option>
+							<option value={9}>9홀</option><option value={18}>18홀</option><option value={27}>27홀</option><option value={36}>36홀</option>
 						</select>
 					</div>
 					<div>
-						<label for="closedDays" class="mb-2 block text-sm font-medium dark:text-gray-300">휴무일 정보</label>
-						<input id="closedDays" type="text" bind:value={formData.operation.closedDays} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+						<label for="maxSpeed" class="mb-2 block text-sm font-medium dark:text-gray-300">최대 운행 속도: {formData.operation.cartPolicy.maxSpeed} km/h</label>
+						<input type="range" id="maxSpeed" bind:value={formData.operation.cartPolicy.maxSpeed} min="5" max="25" disabled={isReadOnly} class="w-full" />
 					</div>
 				</div>
-				<div class="flex items-center gap-4">
-					<label for="fairwayAccess" class="text-sm font-medium dark:text-gray-300">페어웨이 진입 허용</label>
-					<input id="fairwayAccess" type="checkbox" bind:checked={formData.operation.cartPolicy.fairwayAccess} disabled={isReadOnly} class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-				</div>
-			</div>
 
-			<!-- 기타 정보 -->
-			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-				<h3 class="font-semibold text-gray-900 dark:text-white">기타 정보</h3>
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-					<input type="number" placeholder="총 카트 수" bind:value={formData.totalCarts} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<input type="number" placeholder="운행중 카트" bind:value={formData.activeCarts} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<select bind:value={formData.status} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-						<option value="active">운영중</option>
-						<option value="inactive">비활성</option>
-						<option value="maintenance">정비중</option>
-					</select>
-				</div>
-				<div>
-						<label for="specialNotes" class="mb-2 block text-sm font-medium dark:text-gray-300">특이사항</label>
+				<!-- 특이사항 및 환경 정보 -->
+				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+					<h3 class="font-semibold text-gray-900 dark:text-white">특이사항 및 환경</h3>
+					<div>
+						<label class="mb-2 block text-sm font-medium dark:text-gray-300">지형 특성</label>
+						<div class="flex gap-4">
+							<label class="flex items-center gap-2"><input type="checkbox" value="flat" bind:group={formData.environment.terrain} class="rounded" /> 평지형</label>
+							<label class="flex items-center gap-2"><input type="checkbox" value="hilly" bind:group={formData.environment.terrain} class="rounded" /> 구릉형</label>
+							<label class="flex items-center gap-2"><input type="checkbox" value="mountainous" bind:group={formData.environment.terrain} class="rounded" /> 산악형</label>
+						</div>
+					</div>
+					<div>
+						<label for="specialNotes" class="mb-2 block text-sm font-medium dark:text-gray-300">특이사항 메모</label>
 						<textarea id="specialNotes" bind:value={formData.environment.specialNotes} disabled={isReadOnly} rows={3} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+					</div>
 				</div>
 			</div>
 		</div>

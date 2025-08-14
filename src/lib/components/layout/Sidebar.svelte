@@ -1,107 +1,88 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { MENU_ITEMS } from '../../constants/navigation';
-	import { Activity } from 'lucide-svelte';
+	import { MENU_ITEMS, type NavMenuItem } from '../../constants/navigation';
+	import { ChevronDown } from 'lucide-svelte';
+	import { slide } from 'svelte/transition';
 
 	export let isOpen = true;
 
-	// 현재 경로 추적
-	$: currentPath = $page.url.pathname;
+	let openMenus: Record<string, boolean> = {};
 
-	// 활성 메뉴 찾기 (간단한 헬퍼)
-	$: activeMenu = MENU_ITEMS.find((item: { path: string }) => currentPath === item.path);
+	// 현재 경로가 변경될 때마다 활성 메뉴에 따라 상위 메뉴를 열어줌
+	$: {
+		const currentPath = $page.url.pathname;
+		const activeParent = MENU_ITEMS.find(item =>
+			item.children?.some(child => child.path === currentPath)
+		);
+		if (activeParent) {
+			openMenus[activeParent.id] = true;
+		}
+	}
 
-	// 개발 환경 로깅
-	$: if (import.meta.env.DEV) {
-		console.log('📍 Current path:', currentPath);
+	function toggleMenu(id: string) {
+		openMenus[id] = !openMenus[id];
 	}
 </script>
 
-<!-- 사이드바 -->
-<div
-	class="flex flex-col border-r border-gray-200 bg-white transition-all duration-300 dark:border-gray-700 dark:bg-gray-800 {isOpen
-		? 'w-64'
-		: 'w-16'}"
->
-	<!-- 사이드바 헤더 -->
-	<div class="border-b border-gray-200 p-4 dark:border-gray-700">
-		{#if isOpen}
-			<div class="flex items-center gap-2">
-				<Activity class="h-5 w-5 text-blue-600" />
-				<span class="font-semibold text-gray-900 dark:text-white">관제 메뉴</span>
-			</div>
-		{:else}
-			<div class="flex justify-center">
-				<Activity class="h-6 w-6 text-blue-600" />
-			</div>
-		{/if}
+<aside class="flex flex-col border-r border-gray-200 bg-white transition-all duration-300 dark:border-gray-700 dark:bg-gray-800 {isOpen ? 'w-64' : 'w-20'}">
+	<!-- 로고 -->
+	<div class="flex h-16 items-center border-b px-6 dark:border-gray-700">
+		<a href="/dashboard" class="flex items-center gap-2">
+			<img src="/favicon.svg" alt="Logo" class="h-8 w-8" />
+			{#if isOpen}
+				<span class="text-lg font-semibold dark:text-white">AF Operator</span>
+			{/if}
+		</a>
 	</div>
 
-	<!-- 메뉴 항목들 -->
-	<nav class="flex-1 overflow-y-auto p-2">
-		<ul class="space-y-1">
-			{#each MENU_ITEMS as item (item.id)}
-				{@const isActive = currentPath === item.path}
-				<li>
-					<a
-						href={item.path}
-						class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors
-							{isActive
-							? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
-							: 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'}"
-						title={isOpen ? '' : item.label}
-						aria-current={isActive ? 'page' : undefined}
-					>
-						<!-- 아이콘 -->
-						<svelte:component
-							this={item.icon}
-							class="h-5 w-5 flex-shrink-0 {isActive
-								? 'text-blue-600 dark:text-blue-400'
-								: 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'}"
-						/>
+	<!-- 메뉴 -->
+	<nav class="flex-1 space-y-2 overflow-y-auto p-4">
+		{#each MENU_ITEMS as item (item.id)}
+			{@const isActive = item.path === $page.url.pathname}
+			{@const isParentActive = item.children?.some(child => child.path === $page.url.pathname)}
 
-						<!-- 라벨 -->
+			{#if item.children}
+				<!-- 하위 메뉴가 있는 경우 -->
+				<div>
+					<button on:click={() => toggleMenu(item.id)} class="group flex w-full items-center justify-between rounded-lg px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700">
+						<div class="flex items-center gap-3">
+							<svelte:component this={item.icon} class="h-5 w-5 {isParentActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}" />
+							{#if isOpen}
+								<span class="font-medium {isParentActive ? 'text-blue-600 dark:text-blue-300' : 'dark:text-gray-300'}">{item.label}</span>
+							{/if}
+						</div>
 						{#if isOpen}
-							<div class="min-w-0 flex-1">
-								<div class="truncate">{item.label}</div>
-								<div class="truncate text-xs text-gray-500 dark:text-gray-400">
-									{item.description}
-								</div>
-							</div>
+							<ChevronDown class="h-5 w-5 transform transition-transform duration-200 {openMenus[item.id] ? 'rotate-180' : ''}" />
 						{/if}
-
-						<!-- 활성 상태 표시 -->
-						{#if isActive}
-							<div class="h-2 w-2 animate-pulse rounded-full bg-blue-600"></div>
-						{/if}
-					</a>
-				</li>
-			{/each}
-		</ul>
+					</button>
+					{#if openMenus[item.id] && isOpen}
+						<ul class="mt-1 space-y-1 pl-8" transition:slide={{ duration: 200 }}>
+							{#each item.children as child (child.id)}
+								{@const isChildActive = child.path === $page.url.pathname}
+								<li>
+									<a href={child.path} class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 {isChildActive ? 'font-semibold text-blue-600 dark:text-blue-300' : 'dark:text-gray-400'}">
+										<svelte:component this={child.icon} class="h-4 w-4" />
+										{child.label}
+									</a>
+								</li>
+							{/each}
+						</ul>
+					{/if}
+				</div>
+			{:else}
+				<!-- 하위 메뉴가 없는 경우 -->
+				<a href={item.path} class="group flex items-center gap-3 rounded-lg px-4 py-2 {isActive ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}">
+					<svelte:component this={item.icon} class="h-5 w-5 {isActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}" />
+					{#if isOpen}
+						<span class="font-medium">{item.label}</span>
+					{/if}
+				</a>
+			{/if}
+		{/each}
 	</nav>
 
-	<!-- 사이드바 하단 -->
-	<div class="border-t border-gray-200 p-4 dark:border-gray-700">
-		{#if isOpen}
-			<div class="text-xs text-gray-500 dark:text-gray-400">
-				<div class="mb-1 flex items-center gap-1">
-					<div class="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
-					<span>시스템 정상</span>
-				</div>
-				<div>버전: v1.0.0</div>
-
-				<!-- 개발 환경에서만 디버깅 정보 -->
-				{#if import.meta.env.DEV}
-					<div class="mt-2 rounded bg-gray-800 p-2 text-xs">
-						<div class="text-white">현재: {currentPath}</div>
-						<div class="text-green-300">활성: {activeMenu?.label || '없음'}</div>
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<div class="flex justify-center">
-				<div class="h-3 w-3 animate-pulse rounded-full bg-green-500"></div>
-			</div>
-		{/if}
+	<!-- 푸터 -->
+	<div class="mt-auto border-t p-4 dark:border-gray-700">
+		<!-- 푸터 내용 -->
 	</div>
-</div>
+</aside>
