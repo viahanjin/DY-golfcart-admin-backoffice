@@ -1,0 +1,101 @@
+[
+	{
+		"id": "1",
+		"courseName": "서울 컨트리클럽",
+		"courseNameEn": "Seoul Country Club",
+		"courseCode": "SCC001",
+		"address": {
+			"zipcode": "04521",
+			"address1": "서울 중구 세종대로 110",
+			"address2": "본관 10층"
+		},
+		"contact": {
+			"phone": "02-123-4567",
+			"fax": "02-123-4568",
+			"email": "info@seoulcc.co.kr"
+		},
+		"location": {
+			"latitude": 37.5665,
+			"longitude": 126.9780,
+			"altitude": 38.5,
+			"coordinateSystem": "WGS84"
+		},
+		"operation": {
+			"totalHoles": 18,
+			"operatingHours": {
+				"summer": "06:00 - 19:00",
+				"winter": "07:00 - 17:00"
+			},
+			"closedDays": "매주 월요일",
+			"cartPolicy": {
+				"fairwayAccess": true,
+				"rainPolicy": "그린 위 운행 금지",
+				"maxSpeed": 15
+			}
+		},
+		"environment": {
+			"terrain": ["hilly"],
+			"gpsShadedAreas": {
+				"count": 2,
+				"locations": "4번홀 그린, 12번홀 티박스"
+			},
+			"specialNotes": "동절기에는 일부 홀이 폐쇄될 수 있습니다."
+		},
+		"totalCarts": 45,
+		"activeCarts": 32,
+		"status": "active",
+		"lastModified": "2025-01-15T10:30:00Z",
+		"createdAt": "2024-06-15T09:00:00Z"
+	},
+	{
+		"id": "2",
+		"courseName": "부산 오션뷰 골프장",
+		"courseNameEn": "Busan Ocean View Golf",
+		"courseCode": "BOV002",
+		"address": {
+			"zipcode": "48021",
+			"address1": "부산 해운대구 달맞이길 62번길",
+			"address2": ""
+		},
+		"contact": {
+			"phone": "051-742-1234",
+			"email": "contact@busan-ocean.com"
+		},
+		"location": {
+			"latitude": 35.1589,
+			"longitude": 129.1793,
+			"coordinateSystem": "WGS84",
+			"rtk": {
+				"baseLatitude": 35.1590,
+				"baseLongitude": 129.1795,
+				"provider": "KASS"
+			}
+		},
+		"operation": {
+			"totalHoles": 27,
+			"operatingHours": {
+				"summer": "05:30 - 20:00",
+				"winter": "06:30 - 18:00"
+			},
+			"closedDays": "연중무휴",
+			"cartPolicy": {
+				"fairwayAccess": false,
+				"rainPolicy": "운행 중단",
+				"maxSpeed": 12
+			}
+		},
+		"environment": {
+			"terrain": ["hilly", "flat"],
+			"gpsShadedAreas": {
+				"count": 0,
+				"locations": ""
+			},
+			"specialNotes": "바람이 강할 수 있음."
+		},
+		"totalCarts": 60,
+		"activeCarts": 45,
+		"status": "active",
+		"lastModified": "2025-01-14T15:20:00Z",
+		"createdAt": "2024-08-20T11:30:00Z"
+	}
+]

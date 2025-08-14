@@ -1,530 +1,201 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import {
-		Plus,
-		Search,
-		Filter,
-		MapPin,
-		Edit,
-		Trash2,
-		Eye,
-		MoreVertical,
-		Car,
-		Clock,
-		Users,
-		Activity
-	} from 'lucide-svelte';
-	import GolfCourseModal from '@/lib/components/golf/GolfCourseModal.svelte';
-	import ConfirmDialog from '@/lib/components/ui/ConfirmDialog.svelte';
+	import { Plus, Search, Filter, Edit, Trash2, Eye, Map, CheckCircle, XCircle, Clock } from 'lucide-svelte';
+	import mockMaps from '$lib/mock/maps.json';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
+	import MapModal from '$lib/components/map/MapModal.svelte';
 
-	// 골프장 데이터 타입
-	interface GolfCourse {
-		id: string;
-		courseName: string;
-		courseCode: string;
-		address: {
-			region: string;
-			city: string;
-			country: string;
-		};
-		totalHoles: number;
-		totalCarts: number;
-		activeCarts: number;
-		status: 'active' | 'inactive' | 'maintenance';
-		lastModified: string;
+	interface MapData {
+		mapId: string;
+		mapName: string;
+		connectedGolfCourseId: string;
+		version: string;
 		createdAt: string;
+		updatedAt: string;
+		mapStatus: {
+			status: 'active' | 'testing' | 'inactive';
+			validationStatus: 'verified' | 'pending' | 'failed';
+		};
 	}
 
-	// 임시 데이터 (실제로는 API에서 가져올 데이터)
-	let golfCourses: GolfCourse[] = [
-		{
-			id: '1',
-			courseName: '서울 컨트리클럽',
-			courseCode: 'SCC001',
-			address: { region: '서울', city: '강남구', country: 'KR' },
-			totalHoles: 18,
-			totalCarts: 45,
-			activeCarts: 32,
-			status: 'active',
-			lastModified: '2025-01-15T10:30:00Z',
-			createdAt: '2024-06-15T09:00:00Z'
-		},
-		{
-			id: '2',
-			courseName: '부산 오션뷰 골프장',
-			courseCode: 'BOV002',
-			address: { region: '부산', city: '해운대구', country: 'KR' },
-			totalHoles: 27,
-			totalCarts: 60,
-			activeCarts: 45,
-			status: 'active',
-			lastModified: '2025-01-14T15:20:00Z',
-			createdAt: '2024-08-20T11:30:00Z'
-		},
-		{
-			id: '3',
-			courseName: '제주 파라다이스 골프클럽',
-			courseCode: 'JPG003',
-			address: { region: '제주', city: '서귀포시', country: 'KR' },
-			totalHoles: 36,
-			totalCarts: 80,
-			activeCarts: 65,
-			status: 'active',
-			lastModified: '2025-01-13T08:45:00Z',
-			createdAt: '2024-05-10T14:00:00Z'
-		},
-		{
-			id: '4',
-			courseName: '경기 밸리 골프장',
-			courseCode: 'KVG004',
-			address: { region: '경기', city: '용인시', country: 'KR' },
-			totalHoles: 18,
-			totalCarts: 35,
-			activeCarts: 12,
-			status: 'maintenance',
-			lastModified: '2025-01-12T16:15:00Z',
-			createdAt: '2024-09-05T10:20:00Z'
-		}
-	];
-
-	// 상태 관리
+	let maps: MapData[] = mockMaps;
 	let searchQuery = '';
 	let selectedStatus = 'all';
-	let sortBy = 'lastModified';
-	let sortOrder: 'asc' | 'desc' = 'desc';
 
-	// 모달 상태
 	let showModal = false;
 	let modalMode: 'create' | 'edit' | 'view' = 'create';
-	let selectedCourse: GolfCourse | null = null;
-
-	// 삭제 확인 다이얼로그
+	let selectedMap: MapData | null = null;
 	let showDeleteDialog = false;
-	let courseToDelete: GolfCourse | null = null;
+	let mapToDelete: MapData | null = null;
 
-	// 필터링된 골프장 목록
-	$: filteredCourses = golfCourses
-		.filter((course) => {
-			const matchesSearch =
-				course.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				course.courseCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				course.address.city.toLowerCase().includes(searchQuery.toLowerCase());
+	$: filteredMaps = maps.filter(map => {
+		const matchesSearch =
+			map.mapName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			map.mapId.toLowerCase().includes(searchQuery.toLowerCase());
+		const matchesStatus = selectedStatus === 'all' || map.mapStatus.status === selectedStatus;
+		return matchesSearch && matchesStatus;
+	});
 
-			const matchesStatus = selectedStatus === 'all' || course.status === selectedStatus;
-
-			return matchesSearch && matchesStatus;
-		})
-		.sort((a, b) => {
-			const aValue = a[sortBy as keyof GolfCourse];
-			const bValue = b[sortBy as keyof GolfCourse];
-
-			if (sortOrder === 'asc') {
-				return aValue < bValue ? -1 : 1;
-			} else {
-				return aValue > bValue ? -1 : 1;
-			}
-		});
-
-	// 상태별 색상 및 텍스트
-	function getStatusInfo(status: string) {
+	function getStatusInfo(status: 'active' | 'testing' | 'inactive') {
 		switch (status) {
-			case 'active':
-				return {
-					color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/50',
-					text: '운영중'
-				};
-			case 'inactive':
-				return {
-					color: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700',
-					text: '비활성'
-				};
-			case 'maintenance':
-				return {
-					color: 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/50',
-					text: '정비중'
-				};
-			default:
-				return { color: 'text-gray-600 bg-gray-100', text: '알 수 없음' };
+			case 'active': return { color: 'text-green-600 bg-green-100', text: '활성' };
+			case 'testing': return { color: 'text-blue-600 bg-blue-100', text: '테스트 중' };
+			case 'inactive': return { color: 'text-gray-600 bg-gray-100', text: '비활성' };
 		}
 	}
 
-	// 날짜 포맷팅
-	function formatDate(dateString: string) {
-		return new Date(dateString).toLocaleDateString('ko-KR', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
+	function getValidationIcon(status: 'verified' | 'pending' | 'failed') {
+		switch (status) {
+			case 'verified': return CheckCircle;
+			case 'pending': return Clock;
+			case 'failed': return XCircle;
+		}
 	}
 
-	// CRUD 액션들
+	function getValidationClass(status: 'verified' | 'pending' | 'failed') {
+		const baseClass = 'h-5 w-5';
+		switch (status) {
+			case 'verified':
+				return `${baseClass} text-green-500`;
+			case 'pending':
+				return `${baseClass} text-yellow-500`;
+			case 'failed':
+				return `${baseClass} text-red-500`;
+			default:
+				return baseClass;
+		}
+	}
+
 	function handleCreate() {
 		modalMode = 'create';
-		selectedCourse = null;
+		selectedMap = null;
 		showModal = true;
 	}
-
-	function handleView(course: GolfCourse) {
+	function handleView(map: MapData) {
 		modalMode = 'view';
-		selectedCourse = course;
+		selectedMap = map;
 		showModal = true;
 	}
-
-	function handleEdit(course: GolfCourse) {
+	function handleEdit(map: MapData) {
 		modalMode = 'edit';
-		selectedCourse = course;
+		selectedMap = map;
 		showModal = true;
 	}
-
-	function handleDelete(course: GolfCourse) {
-		courseToDelete = course;
+	function handleDelete(map: MapData) {
+		mapToDelete = map;
 		showDeleteDialog = true;
 	}
-
 	function confirmDelete() {
-		if (courseToDelete) {
-			golfCourses = golfCourses.filter((c) => c.id !== courseToDelete?.id);
-			console.log('골프장 삭제됨:', courseToDelete.courseName);
+		if (mapToDelete) {
+			maps = maps.filter(m => m.mapId !== mapToDelete?.mapId);
 		}
 		showDeleteDialog = false;
-		courseToDelete = null;
 	}
-
 	function handleModalSave(event: CustomEvent) {
 		const { mode, data } = event.detail;
-
 		if (mode === 'create') {
-			// 새 골프장 추가
-			const newCourse: GolfCourse = {
-				...data,
-				id: Date.now().toString(),
-				createdAt: new Date().toISOString(),
-				lastModified: new Date().toISOString()
-			};
-			golfCourses = [...golfCourses, newCourse];
-			console.log('새 골프장 추가됨:', newCourse);
-		} else if (mode === 'edit') {
-			// 기존 골프장 수정
-			golfCourses = golfCourses.map((course) =>
-				course.id === data.id ? { ...data, lastModified: new Date().toISOString() } : course
-			);
-			console.log('골프장 수정됨:', data);
+			maps = [...maps, data];
+		} else {
+			maps = maps.map((m) => (m.mapId === data.mapId ? data : m));
 		}
-
 		showModal = false;
 	}
 
-	// 통계 계산
-	$: totalCourses = golfCourses.length;
-	$: activeCourses = golfCourses.filter((c) => c.status === 'active').length;
-	$: totalCartsAll = golfCourses.reduce((sum, c) => sum + c.totalCarts, 0);
-	$: activeCartsAll = golfCourses.reduce((sum, c) => sum + c.activeCarts, 0);
 </script>
 
 <svelte:head>
-	<title>골프장 관리 - 골프카트 관제 시스템</title>
+	<title>맵 관리 - 골프카트 관제 시스템</title>
 </svelte:head>
 
-<!-- 골프장 관리 메인 -->
 <div class="space-y-6 p-6">
-	<!-- 헤더 섹션 -->
+	<!-- 헤더 -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="mb-1 text-2xl font-bold text-gray-900 dark:text-white">골프장 관리</h1>
-			<p class="text-gray-600 dark:text-gray-400">등록된 골프장의 정보를 관리하고 모니터링합니다</p>
+			<h1 class="mb-1 text-2xl font-bold">맵 관리</h1>
+			<p class="text-gray-600">골프장 맵 데이터를 관리하고 버전을 제어합니다.</p>
 		</div>
-
-		<!-- 새 골프장 등록 버튼 -->
-		<button
-			on:click={handleCreate}
-			class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
-		>
+		<button on:click={handleCreate} class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
 			<Plus class="h-4 w-4" />
-			새 골프장 등록
+			새 맵 등록
 		</button>
 	</div>
 
-	<!-- 통계 요약 카드 -->
-	<div class="grid grid-cols-1 gap-6 md:grid-cols-4">
-		<div
-			class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-		>
-			<div class="flex items-center gap-3">
-				<div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/50">
-					<MapPin class="h-5 w-5 text-blue-600 dark:text-blue-400" />
-				</div>
-				<div>
-					<div class="text-xl font-bold text-gray-900 dark:text-white">{totalCourses}</div>
-					<div class="text-sm text-gray-600 dark:text-gray-400">총 골프장</div>
-				</div>
-			</div>
-		</div>
-
-		<div
-			class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-		>
-			<div class="flex items-center gap-3">
-				<div class="rounded-lg bg-green-100 p-2 dark:bg-green-900/50">
-					<Activity class="h-5 w-5 text-green-600 dark:text-green-400" />
-				</div>
-				<div>
-					<div class="text-xl font-bold text-green-600 dark:text-green-400">{activeCourses}</div>
-					<div class="text-sm text-gray-600 dark:text-gray-400">운영중</div>
-				</div>
-			</div>
-		</div>
-
-		<div
-			class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-		>
-			<div class="flex items-center gap-3">
-				<div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/50">
-					<Car class="h-5 w-5 text-purple-600 dark:text-purple-400" />
-				</div>
-				<div>
-					<div class="text-xl font-bold text-gray-900 dark:text-white">{totalCartsAll}</div>
-					<div class="text-sm text-gray-600 dark:text-gray-400">총 카트</div>
-				</div>
-			</div>
-		</div>
-
-		<div
-			class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-		>
-			<div class="flex items-center gap-3">
-				<div class="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/50">
-					<Users class="h-5 w-5 text-orange-600 dark:text-orange-400" />
-				</div>
-				<div>
-					<div class="text-xl font-bold text-orange-600 dark:text-orange-400">{activeCartsAll}</div>
-					<div class="text-sm text-gray-600 dark:text-gray-400">운행중 카트</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	<!-- 검색 및 필터 -->
-	<div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+	<div class="rounded-lg border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
 		<div class="flex flex-col items-center gap-4 md:flex-row">
-			<!-- 검색 -->
 			<div class="relative flex-1">
-				<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-				<input
-					type="text"
-					placeholder="골프장명, 코드, 지역으로 검색..."
-					bind:value={searchQuery}
-					class="w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				/>
+				<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+				<input type="text" placeholder="맵 이름, ID로 검색..." bind:value={searchQuery} class="w-full rounded-lg border-gray-300 pl-10 dark:border-gray-600 dark:bg-gray-700" />
 			</div>
-
-			<!-- 상태 필터 -->
 			<div class="flex items-center gap-2">
 				<Filter class="h-4 w-4 text-gray-400" />
-				<select
-					bind:value={selectedStatus}
-					class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				>
+				<select bind:value={selectedStatus} class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
 					<option value="all">전체 상태</option>
-					<option value="active">운영중</option>
+					<option value="active">활성</option>
+					<option value="testing">테스트 중</option>
 					<option value="inactive">비활성</option>
-					<option value="maintenance">정비중</option>
 				</select>
-			</div>
-
-			<!-- 정렬 -->
-			<div class="flex items-center gap-2">
-				<select
-					bind:value={sortBy}
-					class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				>
-					<option value="lastModified">최근 수정순</option>
-					<option value="courseName">이름순</option>
-					<option value="createdAt">등록순</option>
-					<option value="totalCarts">카트 수순</option>
-				</select>
-
-				<button
-					on:click={() => (sortOrder = sortOrder === 'asc' ? 'desc' : 'asc')}
-					class="rounded-lg border border-gray-300 p-2 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
-				>
-					{sortOrder === 'asc' ? '↑' : '↓'}
-				</button>
 			</div>
 		</div>
 	</div>
 
-	<!-- 골프장 목록 테이블 -->
-	<div
-		class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-	>
-		<div class="overflow-x-auto">
-			<table class="w-full">
-				<thead class="bg-gray-50 dark:bg-gray-700">
-					<tr>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
-						>
-							골프장 정보
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
-						>
-							위치
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
-						>
-							홀/카트
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
-						>
-							상태
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
-						>
-							최근 수정
-						</th>
-						<th
-							class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
-						>
-							작업
-						</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-					{#each filteredCourses as course (course.id)}
-						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-							<!-- 골프장 정보 -->
-							<td class="px-6 py-4">
-								<div>
-									<div class="text-sm font-medium text-gray-900 dark:text-white">
-										{course.courseName}
-									</div>
-									<div class="text-sm text-gray-500 dark:text-gray-400">
-										{course.courseCode}
-									</div>
-								</div>
-							</td>
-
-							<!-- 위치 -->
-							<td class="px-6 py-4">
-								<div class="text-sm text-gray-900 dark:text-white">
-									{course.address.region}
-									{course.address.city}
-								</div>
-								<div class="text-sm text-gray-500 dark:text-gray-400">
-									{course.address.country}
-								</div>
-							</td>
-
-							<!-- 홀/카트 정보 -->
-							<td class="px-6 py-4">
-								<div class="text-sm text-gray-900 dark:text-white">
-									{course.totalHoles}홀
-								</div>
-								<div class="text-sm text-gray-500 dark:text-gray-400">
-									카트 {course.activeCarts}/{course.totalCarts}
-								</div>
-							</td>
-
-							<!-- 상태 -->
-							<td class="px-6 py-4">
-								<span
-									class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {getStatusInfo(
-										course.status
-									).color}"
-								>
-									{getStatusInfo(course.status).text}
-								</span>
-							</td>
-
-							<!-- 최근 수정 -->
-							<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-								{formatDate(course.lastModified)}
-							</td>
-
-							<!-- 작업 버튼들 -->
-							<td class="px-6 py-4 text-right">
-								<div class="flex items-center justify-end gap-2">
-									<button
-										on:click={() => handleView(course)}
-										title="상세보기"
-										class="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-									>
-										<Eye class="h-4 w-4" />
-									</button>
-									<button
-										on:click={() => handleEdit(course)}
-										title="수정"
-										class="p-1.5 text-gray-400 hover:text-green-600 dark:hover:text-green-400"
-									>
-										<Edit class="h-4 w-4" />
-									</button>
-									<button
-										on:click={() => handleDelete(course)}
-										title="삭제"
-										class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
-									>
-										<Trash2 class="h-4 w-4" />
-									</button>
-								</div>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-
-			<!-- 데이터가 없을 때 -->
-			{#if filteredCourses.length === 0}
-				<div class="py-12 text-center">
-					<MapPin class="mx-auto mb-4 h-12 w-12 text-gray-400" />
-					<h3 class="mb-2 text-lg font-medium text-gray-900 dark:text-white">골프장이 없습니다</h3>
-					<p class="mb-4 text-gray-500 dark:text-gray-400">
-						{searchQuery || selectedStatus !== 'all'
-							? '검색 조건에 맞는 골프장이 없습니다.'
-							: '첫 번째 골프장을 등록해보세요.'}
-					</p>
-					{#if !searchQuery && selectedStatus === 'all'}
-						<button
-							on:click={handleCreate}
-							class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
-						>
-							<Plus class="h-4 w-4" />
-							골프장 등록
-						</button>
-					{/if}
-				</div>
-			{/if}
-		</div>
+	<!-- 맵 목록 테이블 -->
+	<div class="overflow-hidden rounded-lg border bg-white dark:border-gray-700 dark:bg-gray-800">
+		<table class="w-full">
+			<thead class="bg-gray-50 dark:bg-gray-700">
+				<tr>
+					<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">맵 이름/ID</th>
+					<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">버전</th>
+					<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">연결 골프장</th>
+					<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">상태</th>
+					<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">검증</th>
+					<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">최근 수정일</th>
+					<th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">작업</th>
+				</tr>
+			</thead>
+			<tbody class="divide-y dark:divide-gray-700">
+				{#each filteredMaps as map (map.mapId)}
+				<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+					<td class="px-6 py-4">
+						<div class="font-medium">{map.mapName}</div>
+						<div class="text-sm text-gray-500">{map.mapId}</div>
+					</td>
+					<td class="px-6 py-4 text-sm font-mono">v{map.version}</td>
+					<td class="px-6 py-4 text-sm">{map.connectedGolfCourseId}</td>
+					<td class="px-6 py-4">
+						<span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 {getStatusInfo(map.mapStatus.status).color}">
+							{getStatusInfo(map.mapStatus.status).text}
+						</span>
+					</td>
+					<td class="px-6 py-4">
+						<svelte:component
+							this={getValidationIcon(map.mapStatus.validationStatus)}
+							class={getValidationClass(map.mapStatus.validationStatus)}
+						/>
+					</td>
+					<td class="px-6 py-4 text-sm text-gray-500">{new Date(map.updatedAt).toLocaleDateString()}</td>
+					<td class="px-6 py-4 text-right">
+						<div class="flex items-center justify-end gap-2">
+							<button on:click={() => handleView(map)} title="상세보기" class="p-1.5 text-gray-400 hover:text-blue-600"><Eye class="h-4 w-4" /></button>
+							<button on:click={() => handleEdit(map)} title="수정" class="p-1.5 text-gray-400 hover:text-green-600"><Edit class="h-4 w-4" /></button>
+							<button on:click={() => handleDelete(map)} title="삭제" class="p-1.5 text-gray-400 hover:text-red-600"><Trash2 class="h-4 w-4" /></button>
+						</div>
+					</td>
+				</tr>
+				{/each}
+			</tbody>
+		</table>
 	</div>
 </div>
 
-<!-- 골프장 등록/수정 모달 -->
 {#if showModal}
-	<GolfCourseModal
-		{modalMode}
-		{selectedCourse}
-		on:save={handleModalSave}
-		on:close={() => (showModal = false)}
-	/>
+	<MapModal {modalMode} {selectedMap} on:save={handleModalSave} on:close={() => (showModal = false)} />
 {/if}
 
-<!-- 삭제 확인 다이얼로그 -->
-{#if showDeleteDialog && courseToDelete}
+{#if showDeleteDialog}
 	<ConfirmDialog
-		title="골프장 삭제"
-		message="'{courseToDelete.courseName}' 골프장을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-		confirmText="삭제"
-		cancelText="취소"
-		danger={true}
+		title="맵 삭제"
+		message={`'${mapToDelete?.mapName}' (v${mapToDelete?.version}) 맵을 정말 삭제하시겠습니까?`}
 		on:confirm={confirmDelete}
-		on:cancel={() => {
-			showDeleteDialog = false;
-			courseToDelete = null;
-		}}
+		on:cancel={() => (showDeleteDialog = false)}
 	/>
 {/if}
