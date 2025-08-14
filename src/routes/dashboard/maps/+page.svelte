@@ -51,6 +51,20 @@
 		}
 	}
 
+	function getValidationClass(status: 'verified' | 'pending' | 'failed') {
+		const baseClass = 'h-5 w-5';
+		switch (status) {
+			case 'verified':
+				return `${baseClass} text-green-500`;
+			case 'pending':
+				return `${baseClass} text-yellow-500`;
+			case 'failed':
+				return `${baseClass} text-red-500`;
+			default:
+				return baseClass;
+		}
+	}
+
 	function handleCreate() {
 		modalMode = 'create';
 		selectedMap = null;
@@ -153,10 +167,9 @@
 						</span>
 					</td>
 					<td class="px-6 py-4">
-						<svelte:component this={getValidationIcon(map.mapStatus.validationStatus)} class="h-5 w-5"
-							class:text-green-500={map.mapStatus.validationStatus === 'verified'}
-							class:text-yellow-500={map.mapStatus.validationStatus === 'pending'}
-							class:text-red-500={map.mapStatus.validationStatus === 'failed'}
+						<svelte:component
+							this={getValidationIcon(map.mapStatus.validationStatus)}
+							class={getValidationClass(map.mapStatus.validationStatus)}
 						/>
 					</td>
 					<td class="px-6 py-4 text-sm text-gray-500">{new Date(map.updatedAt).toLocaleDateString()}</td>
