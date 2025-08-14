@@ -46,7 +46,6 @@
 	});
 </script>
 
-// src/routes/dashboard/+page.svelte
 <svelte:head>
 	<title>대시보드 - 골프카트 관제 시스템</title>
 </svelte:head>
