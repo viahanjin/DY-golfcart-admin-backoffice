@@ -1,0 +1,150 @@
+<script lang="ts">
+	import { createEventDispatcher, onMount } from 'svelte';
+	import { X } from 'lucide-svelte';
+
+	export let modalMode: 'create' | 'edit' | 'view';
+	export let selectedCart: any = null;
+
+	const dispatch = createEventDispatcher();
+
+	function getInitialFormData() {
+		return {
+			id: '',
+			cartName: '',
+			modelYear: new Date().getFullYear().toString(),
+			manufacturer: '',
+			assignedGolfCourseId: '',
+			hardware: { mcu: true, vcu: false, vpu: false, acu: false },
+			sensors: [],
+			capabilities: {
+				supportedModes: ['manual'],
+				maxSpeed: 15,
+				battery: { type: 'Li-ion', capacity: '', expectedHours: 0 }
+			},
+			network: { macAddress: '', ip: '', isStatic: false },
+			mqtt: { clientId: '', qos: 1 },
+			cartStatus: {
+				currentState: 'unavailable',
+				lastInspection: '',
+				nextInspection: ''
+			}
+		};
+	}
+
+	let formData = getInitialFormData();
+	$: isReadOnly = modalMode === 'view';
+
+	onMount(() => {
+		if (selectedCart && (modalMode === 'edit' || modalMode === 'view')) {
+			formData = JSON.parse(JSON.stringify(selectedCart));
+		} else {
+			formData.id = `CART-${Date.now().toString().slice(-4)}`;
+			formData.mqtt.clientId = `${formData.id}-CLIENT`;
+		}
+	});
+
+	function handleSave() {
+		if (formData.id) {
+			dispatch('save', { mode: modalMode, data: formData });
+		} else {
+			alert('카트 ID는 필수입니다.');
+		}
+	}
+
+	function handleClose() {
+		dispatch('close');
+	}
+
+	const sensorOptions = [
+		{ id: '3d-lidar', label: '3D LiDAR' },
+		{ id: 'stereo-camera', label: '스테레오 카메라' },
+		{ id: 'gps-ins', label: 'GPS/INS' },
+		{ id: 'wifi', label: 'WiFi' },
+		{ id: 'ble', label: 'BLE' },
+		{ id: 'lte', label: 'LTE' }
+	];
+</script>
+
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+	<div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white dark:bg-gray-800">
+		<!-- 헤더 -->
+		<div class="flex items-center justify-between border-b p-6 dark:border-gray-700">
+			<h2 class="text-xl font-semibold">
+				{modalMode === 'create' ? '새 카트 등록' : modalMode === 'edit' ? '카트 정보 수정' : '카트 상세 정보'}
+			</h2>
+			<button on:click={handleClose} class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"><X class="h-5 w-5" /></button>
+		</div>
+
+		<!-- 폼 -->
+		<div class="space-y-6 p-6">
+			<!-- 기본 정보 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold">카트 기본 정보</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div><label for="cartId">카트 ID *</label><input id="cartId" type="text" bind:value={formData.id} disabled={isReadOnly} class="w-full rounded-lg" /></div>
+					<div><label for="cartName">카트명/별명</label><input id="cartName" type="text" bind:value={formData.cartName} disabled={isReadOnly} class="w-full rounded-lg" /></div>
+					<div><label for="manufacturer">제조사</label><input id="manufacturer" type="text" bind:value={formData.manufacturer} disabled={isReadOnly} class="w-full rounded-lg" /></div>
+					<div><label for="modelYear">제조년도</label><input id="modelYear" type="text" bind:value={formData.modelYear} disabled={isReadOnly} class="w-full rounded-lg" /></div>
+					<div><label for="assignedGolfCourseId">할당 골프장 *</label>
+						<select id="assignedGolfCourseId" bind:value={formData.assignedGolfCourseId} disabled={isReadOnly} class="w-full rounded-lg">
+							<option value="">선택하세요</option>
+							<option value="1">서울 컨트리클럽</option>
+							<option value="2">부산 오션뷰 골프장</option>
+						</select>
+					</div>
+				</div>
+			</div>
+
+			<!-- 하드웨어 및 센서 -->
+			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+					<h3 class="font-semibold">제어 모듈 구성</h3>
+					{#each Object.keys(formData.hardware) as key}
+						<div class="flex items-center gap-2">
+							<input type="checkbox" id="hw-{key}" bind:checked={formData.hardware[key]} disabled={isReadOnly} class="h-4 w-4 rounded" />
+							<label for="hw-{key}" class="uppercase">{key}</label>
+						</div>
+					{/each}
+				</div>
+				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+					<h3 class="font-semibold">센서 구성</h3>
+					{#each sensorOptions as sensor}
+						<div class="flex items-center gap-2">
+							<input type="checkbox" id="sensor-{sensor.id}" value={sensor.id} bind:group={formData.sensors} disabled={isReadOnly} class="h-4 w-4 rounded" />
+							<label for="sensor-{sensor.id}">{sensor.label}</label>
+						</div>
+					{/each}
+				</div>
+			</div>
+
+			<!-- 상태 및 점검 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold">카트 상태</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+					<div><label for="currentState">현재 상태</label>
+						<select id="currentState" bind:value={formData.cartStatus.currentState} disabled={isReadOnly} class="w-full rounded-lg">
+							<option value="available">운행 가능</option>
+							<option value="maintenance">정비 중</option>
+							<option value="broken">고장/수리</option>
+							<option value="unavailable">미사용</option>
+						</select>
+					</div>
+					<div><label for="lastInspection">마지막 점검일</label><input id="lastInspection" type="date" bind:value={formData.cartStatus.lastInspection} disabled={isReadOnly} class="w-full rounded-lg" /></div>
+					<div><label for="nextInspection">다음 정비 예정일</label><input id="nextInspection" type="date" bind:value={formData.cartStatus.nextInspection} disabled={isReadOnly} class="w-full rounded-lg" /></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 푸터 -->
+		<div class="flex items-center justify-end gap-3 border-t px-6 py-4 dark:border-gray-700">
+			{#if !isReadOnly}
+				<button on:click={handleClose} class="rounded-lg border bg-white px-4 py-2 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700">취소</button>
+				<button on:click={handleSave} class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+					{modalMode === 'create' ? '등록' : '수정'}
+				</button>
+			{:else}
+				<button on:click={handleClose} class="rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700">닫기</button>
+			{/if}
+		</div>
+	</div>
+</div>

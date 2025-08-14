@@ -1,0 +1,98 @@
+[
+  {
+    "mapId": "MAP_SCC_V1.0",
+    "mapName": "서울 컨트리클럽 기본 맵",
+    "connectedGolfCourseId": "1",
+    "version": "1.0",
+    "createdAt": "2024-11-01T10:00:00Z",
+    "updatedAt": "2024-11-05T14:30:00Z",
+    "mapData": {
+      "resolution": "5cm/pixel",
+      "size": "2000m x 1500m",
+      "originGps": {
+        "latitude": 37.5665,
+        "longitude": 126.9780
+      },
+      "rotation": 2.5
+    },
+    "mapFiles": {
+      "imageFile": "/maps/scc_v1.png",
+      "metadataFile": "/maps/scc_v1.json"
+    },
+    "courseInfo": {
+      "totalCourses": 2,
+      "defaultMode": "auto",
+      "defaultSpeedLimit": 15
+    },
+    "mapStatus": {
+      "status": "active",
+      "appliedCarts": ["CART-001", "CART-002"],
+      "lastUpdate": "맵 생성",
+      "validationStatus": "verified"
+    }
+  },
+  {
+    "mapId": "MAP_SCC_V1.1_TEST",
+    "mapName": "서울 컨트리클럽 테스트 맵",
+    "connectedGolfCourseId": "1",
+    "version": "1.1",
+    "createdAt": "2025-01-20T09:00:00Z",
+    "updatedAt": "2025-01-20T11:00:00Z",
+    "mapData": {
+      "resolution": "5cm/pixel",
+      "size": "2050m x 1550m",
+      "originGps": {
+        "latitude": 37.5668,
+        "longitude": 126.9782
+      },
+      "rotation": 2.5
+    },
+    "mapFiles": {
+      "imageFile": "/maps/scc_v1.1.png",
+      "metadataFile": "/maps/scc_v1.1.json"
+    },
+    "courseInfo": {
+      "totalCourses": 2,
+      "defaultMode": "autonomous",
+      "defaultSpeedLimit": 18
+    },
+    "mapStatus": {
+      "status": "testing",
+      "appliedCarts": [],
+      "lastUpdate": "코스 경로 수정",
+      "validationStatus": "pending"
+    }
+  },
+  {
+    "mapId": "MAP_BOV_V2.0",
+    "mapName": "부산 오션뷰 신규 맵",
+    "connectedGolfCourseId": "2",
+    "version": "2.0",
+    "createdAt": "2024-12-10T15:00:00Z",
+    "updatedAt": "2024-12-10T15:00:00Z",
+    "mapData": {
+      "resolution": "4cm/pixel",
+      "size": "2500m x 2000m",
+      "originGps": {
+        "latitude": 35.1589,
+        "longitude": 129.1793
+      },
+      "rotation": 10.1
+    },
+    "mapFiles": {
+      "imageFile": "/maps/bov_v2.png",
+      "metadataFile": "/maps/bov_v2.json"
+    },
+    "courseInfo": {
+      "totalCourses": 3,
+      "defaultMode": "auto",
+      "defaultSpeedLimit": 14
+    },
+    "mapStatus": {
+      "status": "inactive",
+      "appliedCarts": [],
+      "lastUpdate": "초기 생성",
+      "validationStatus": "failed"
+    }
+  }
+]

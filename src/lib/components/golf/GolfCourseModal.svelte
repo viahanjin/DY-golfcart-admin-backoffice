@@ -1,41 +1,91 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import { X, MapPin, Car, Hash } from 'lucide-svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
+	import { X } from 'lucide-svelte';
 
 	export let modalMode: 'create' | 'edit' | 'view';
-	export let selectedCourse: any = null;
+	export let selectedCourse: any = null; // In a real app, this would be a proper type import
 
 	const dispatch = createEventDispatcher();
 
-	// 폼 데이터
-	let formData = {
-		courseName: '',
-		courseCode: '',
-		address: {
-			region: '',
-			city: '',
-			country: 'KR'
-		},
-		totalHoles: 18,
-		totalCarts: 0,
-		activeCarts: 0,
-		status: 'active'
-	};
-
-	// 수정 모드일 때 기존 데이터 로드
-	$: if (selectedCourse && (modalMode === 'edit' || modalMode === 'view')) {
-		formData = { ...selectedCourse };
+	// 폼 데이터 초기화 함수
+	function getInitialFormData() {
+		return {
+			id: '',
+			courseName: '',
+			courseNameEn: '',
+			courseCode: '',
+			address: {
+				zipcode: '',
+				address1: '',
+				address2: ''
+			},
+			contact: {
+				phone: '',
+				fax: '',
+				email: ''
+			},
+			location: {
+				latitude: 0,
+				longitude: 0,
+				altitude: 0,
+				coordinateSystem: 'WGS84',
+				rtk: {
+					baseLatitude: 0,
+					baseLongitude: 0,
+					provider: ''
+				}
+			},
+			operation: {
+				totalHoles: 18,
+				operatingHours: {
+					summer: '06:00 - 19:00',
+					winter: '07:00 - 17:00'
+				},
+				closedDays: '매주 월요일',
+				cartPolicy: {
+					fairwayAccess: false,
+					rainPolicy: '상황에 따라 결정',
+					maxSpeed: 15
+				}
+			},
+			environment: {
+				terrain: [],
+				gpsShadedAreas: {
+					count: 0,
+					locations: ''
+				},
+				specialNotes: ''
+			},
+			totalCarts: 0,
+			activeCarts: 0,
+			status: 'active',
+			lastModified: '',
+			createdAt: ''
+		};
 	}
+
+	let formData = getInitialFormData();
+
+	// onMount를 사용해 수정/상세보기 모드일 때 데이터 로드
+	onMount(() => {
+		if (selectedCourse && (modalMode === 'edit' || modalMode === 'view')) {
+			// 깊은 복사를 통해 원본 데이터 오염 방지
+			formData = JSON.parse(JSON.stringify(selectedCourse));
+		}
+	});
 
 	// 읽기 전용 모드 체크
 	$: isReadOnly = modalMode === 'view';
 
 	function handleSave() {
 		if (formData.courseName && formData.courseCode) {
+			// 부모 컴포넌트로 데이터 전달 시에도 복사본 전달
 			dispatch('save', {
 				mode: modalMode,
-				data: formData
+				data: JSON.parse(JSON.stringify(formData))
 			});
+		} else {
+			alert('골프장명과 코드는 필수 항목입니다.');
 		}
 	}
 
@@ -69,193 +119,94 @@
 
 		<!-- 모달 내용 -->
 		<div class="space-y-6 p-6">
-			<!-- 기본 정보 -->
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-				<div>
-					<label
-						for="courseName"
-						class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-					>
-						골프장명 *
-					</label>
-					<input
-						id="courseName"
-						type="text"
-						bind:value={formData.courseName}
-						disabled={isReadOnly}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-						placeholder="예: 서울 컨트리클럽"
-					/>
+			<!-- 기본 정보 섹션 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold text-gray-900 dark:text-white">기본 정보</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div>
+						<label for="courseName" class="mb-2 block text-sm font-medium">골프장명 (한글) *</label>
+						<input id="courseName" type="text" bind:value={formData.courseName} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					</div>
+					<div>
+						<label for="courseNameEn" class="mb-2 block text-sm font-medium">골프장명 (영문)</label>
+						<input id="courseNameEn" type="text" bind:value={formData.courseNameEn} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					</div>
 				</div>
-
 				<div>
-					<label
-						for="courseCode"
-						class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-					>
-						골프장 코드 *
-					</label>
-					<input
-						id="courseCode"
-						type="text"
-						bind:value={formData.courseCode}
-						disabled={isReadOnly}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-						placeholder="예: SCC001"
-					/>
+					<label for="courseCode" class="mb-2 block text-sm font-medium">골프장 코드 *</label>
+					<input id="courseCode" type="text" bind:value={formData.courseCode} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+				</div>
+				<!-- 주소 -->
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+					<input type="text" placeholder="우편번호" bind:value={formData.address.zipcode} disabled={isReadOnly} class="md:col-span-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					<input type="text" placeholder="주소" bind:value={formData.address.address1} disabled={isReadOnly} class="md:col-span-2 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					<input type="text" placeholder="상세주소" bind:value={formData.address.address2} disabled={isReadOnly} class="md:col-span-3 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+				</div>
+				<!-- 연락처 -->
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<input type="tel" placeholder="대표 전화번호" bind:value={formData.contact.phone} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					<input type="email" placeholder="대표 이메일" bind:value={formData.contact.email} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
 				</div>
 			</div>
 
-			<!-- 주소 정보 -->
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-				<div>
-					<label
-						for="region"
-						class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-					>
-						지역/도
-					</label>
-					<input
-						id="region"
-						type="text"
-						bind:value={formData.address.region}
-						disabled={isReadOnly}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-						placeholder="예: 서울"
-					/>
+			<!-- 위치 정보 섹션 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold text-gray-900 dark:text-white">위치 정보</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+					<input type="number" placeholder="위도 (Latitude)" bind:value={formData.location.latitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					<input type="number" placeholder="경도 (Longitude)" bind:value={formData.location.longitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					<input type="number" placeholder="고도 (Altitude)" bind:value={formData.location.altitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
 				</div>
-
 				<div>
-					<label for="city" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-						시/군/구
-					</label>
-					<input
-						id="city"
-						type="text"
-						bind:value={formData.address.city}
-						disabled={isReadOnly}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-						placeholder="예: 강남구"
-					/>
-				</div>
-
-				<div>
-					<label
-						for="country"
-						class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-					>
-						국가
-					</label>
-					<select
-						id="country"
-						bind:value={formData.address.country}
-						disabled={isReadOnly}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-					>
-						<option value="KR">한국</option>
-						<option value="JP">일본</option>
-						<option value="US">미국</option>
+					<label for="coordinateSystem" class="mb-2 block text-sm font-medium">좌표계</label>
+					<select id="coordinateSystem" bind:value={formData.location.coordinateSystem} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+						<option value="WGS84">WGS84</option>
+						<option value="UTM-K">UTM-K</option>
 					</select>
 				</div>
 			</div>
 
-			<!-- 코스 및 카트 정보 -->
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-				<div>
-					<label
-						for="totalHoles"
-						class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-					>
-						총 홀 수
-					</label>
-					<select
-						id="totalHoles"
-						bind:value={formData.totalHoles}
-						disabled={isReadOnly}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-					>
-						<option value={9}>9홀</option>
-						<option value={18}>18홀</option>
-						<option value={27}>27홀</option>
-						<option value={36}>36홀</option>
-					</select>
+			<!-- 운영 정보 섹션 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold text-gray-900 dark:text-white">운영 정보</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div>
+						<label for="totalHoles" class="mb-2 block text-sm font-medium">홀 수</label>
+						<select id="totalHoles" bind:value={formData.operation.totalHoles} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+							<option value={9}>9홀</option>
+							<option value={18}>18홀</option>
+							<option value={27}>27홀</option>
+							<option value={36}>36홀</option>
+						</select>
+					</div>
+					<div>
+						<label for="closedDays" class="mb-2 block text-sm font-medium">휴무일 정보</label>
+						<input id="closedDays" type="text" bind:value={formData.operation.closedDays} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					</div>
 				</div>
-
-				<div>
-					<label
-						for="totalCarts"
-						class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-					>
-						총 카트 수
-					</label>
-					<input
-						id="totalCarts"
-						type="number"
-						bind:value={formData.totalCarts}
-						disabled={isReadOnly}
-						min="0"
-						max="100"
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-						placeholder="0"
-					/>
+				<div class="flex items-center gap-4">
+					<label for="fairwayAccess" class="text-sm font-medium">페어웨이 진입 허용</label>
+					<input id="fairwayAccess" type="checkbox" bind:checked={formData.operation.cartPolicy.fairwayAccess} disabled={isReadOnly} class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
 				</div>
+			</div>
 
-				<div>
-					<label
-						for="activeCarts"
-						class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-					>
-						운행 중 카트
-					</label>
-					<input
-						id="activeCarts"
-						type="number"
-						bind:value={formData.activeCarts}
-						disabled={isReadOnly}
-						min="0"
-						max={formData.totalCarts}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-						placeholder="0"
-					/>
-				</div>
-
-				<div>
-					<label
-						for="status"
-						class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-					>
-						운영 상태
-					</label>
-					<select
-						id="status"
-						bind:value={formData.status}
-						disabled={isReadOnly}
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-					>
+			<!-- 기타 정보 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold text-gray-900 dark:text-white">기타 정보</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+					<input type="number" placeholder="총 카트 수" bind:value={formData.totalCarts} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					<input type="number" placeholder="운행중 카트" bind:value={formData.activeCarts} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+					<select bind:value={formData.status} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
 						<option value="active">운영중</option>
 						<option value="inactive">비활성</option>
 						<option value="maintenance">정비중</option>
 					</select>
 				</div>
-			</div>
-
-			<!-- 안내 메시지 -->
-			{#if modalMode === 'create'}
-				<div
-					class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
-				>
-					<div class="flex items-start gap-3">
-						<MapPin class="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
-						<div class="text-sm text-blue-800 dark:text-blue-200">
-							<p class="mb-1 font-medium">골프장 등록 안내</p>
-							<p>
-								기본 정보만 입력하고 등록 후, 상세 설정(코스 레이아웃, GPS 좌표 등)은 별도 메뉴에서
-								설정할 수 있습니다.
-							</p>
-						</div>
-					</div>
+				<div>
+						<label for="specialNotes" class="mb-2 block text-sm font-medium">특이사항</label>
+						<textarea id="specialNotes" bind:value={formData.environment.specialNotes} disabled={isReadOnly} rows={3} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"></textarea>
 				</div>
-			{/if}
+			</div>
 		</div>
 
 		<!-- 모달 푸터 -->

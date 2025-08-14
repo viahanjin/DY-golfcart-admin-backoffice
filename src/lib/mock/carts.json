@@ -1,0 +1,113 @@
+[
+  {
+    "id": "CART-001",
+    "cartName": "자율주행 1호",
+    "modelYear": "2024",
+    "manufacturer": "DY",
+    "assignedGolfCourseId": "1",
+    "hardware": {
+      "mcu": true,
+      "vcu": true,
+      "vpu": true,
+      "acu": true
+    },
+    "sensors": ["3d-lidar", "stereo-camera", "gps-ins", "lte"],
+    "capabilities": {
+      "supportedModes": ["manual", "auto", "autonomous"],
+      "maxSpeed": 20,
+      "battery": {
+        "type": "Li-ion",
+        "capacity": "10kWh",
+        "expectedHours": 8
+      }
+    },
+    "network": {
+      "macAddress": "00:1A:2B:3C:4D:5E",
+      "ip": "192.168.1.101",
+      "isStatic": true
+    },
+    "mqtt": {
+      "clientId": "CART-001-CLIENT",
+      "qos": 2
+    },
+    "cartStatus": {
+      "currentState": "available",
+      "lastInspection": "2025-01-10",
+      "nextInspection": "2025-07-10"
+    }
+  },
+  {
+    "id": "CART-002",
+    "cartName": "베이직 5호",
+    "modelYear": "2022",
+    "manufacturer": "YAMAHA",
+    "assignedGolfCourseId": "1",
+    "hardware": {
+      "mcu": true,
+      "vcu": true,
+      "vpu": false,
+      "acu": false
+    },
+    "sensors": ["gps-ins", "wifi"],
+    "capabilities": {
+      "supportedModes": ["manual", "auto"],
+      "maxSpeed": 15,
+      "battery": {
+        "type": "Lead-Acid",
+        "capacity": "8kWh",
+        "expectedHours": 6
+      }
+    },
+    "network": {
+      "macAddress": "00:1A:2B:3C:4D:5F",
+      "ip": "192.168.1.102",
+      "isStatic": false
+    },
+    "mqtt": {
+      "clientId": "CART-002-CLIENT",
+      "qos": 1
+    },
+    "cartStatus": {
+      "currentState": "maintenance",
+      "lastInspection": "2025-01-05",
+      "nextInspection": "2025-02-05"
+    }
+  },
+  {
+    "id": "CART-003",
+    "cartName": "고장난 카트",
+    "modelYear": "2023",
+    "manufacturer": "Club Car",
+    "assignedGolfCourseId": "2",
+    "hardware": {
+      "mcu": true,
+      "vcu": true,
+      "vpu": true,
+      "acu": false
+    },
+    "sensors": ["stereo-camera", "gps-ins", "wifi"],
+    "capabilities": {
+      "supportedModes": ["manual", "auto"],
+      "maxSpeed": 18,
+      "battery": {
+        "type": "Li-ion",
+        "capacity": "10kWh",
+        "expectedHours": 7
+      }
+    },
+    "network": {
+      "macAddress": "00:1A:2B:3C:4D:6A",
+      "ip": "",
+      "isStatic": false
+    },
+    "mqtt": {
+      "clientId": "CART-003-CLIENT",
+      "qos": 1
+    },
+    "cartStatus": {
+      "currentState": "broken",
+      "lastInspection": "2024-11-20",
+      "nextInspection": ""
+    }
+  }
+]
