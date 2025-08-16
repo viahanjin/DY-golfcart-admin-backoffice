@@ -162,7 +162,7 @@
 					</div>
 					<button class="btn-secondary w-full">지도에서 위치 선택 (TODO)</button>
 				</div>
-			</div>
+
 				<!-- 운영 정보 섹션 -->
 				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
 					<h3 class="font-semibold text-gray-900 dark:text-white">운영 정보</h3>
