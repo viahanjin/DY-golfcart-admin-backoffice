@@ -1,0 +1,44 @@
+[
+  {
+    "courseId": "COURSE_SCC_1",
+    "courseName": "LAKE 코스",
+    "courseCode": "LAKE",
+    "golfCourseId": "1",
+    "golfCourseName": "서울 컨트리클럽",
+    "courseOrder": 1,
+    "holeCount": 9,
+    "courseType": "일반코스",
+    "difficulty": "중급",
+    "length": 3200,
+    "avgSlope": 5.5,
+    "hasMap": true
+  },
+  {
+    "courseId": "COURSE_SCC_2",
+    "courseName": "HILL 코스",
+    "courseCode": "HILL",
+    "golfCourseId": "1",
+    "golfCourseName": "서울 컨트리클럽",
+    "courseOrder": 2,
+    "holeCount": 9,
+    "courseType": "일반코스",
+    "difficulty": "고급",
+    "length": 3450,
+    "avgSlope": 8.2,
+    "hasMap": false
+  },
+  {
+    "courseId": "COURSE_BOV_1",
+    "courseName": "OCEAN 코스",
+    "courseCode": "OCEAN",
+    "golfCourseId": "2",
+    "golfCourseName": "부산 오션뷰 골프장",
+    "courseOrder": 1,
+    "holeCount": 9,
+    "courseType": "일반코스",
+    "difficulty": "중급",
+    "length": 3100,
+    "avgSlope": 4.0,
+    "hasMap": true
+  }
+]

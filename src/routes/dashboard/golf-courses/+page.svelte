@@ -310,117 +310,70 @@
 
 	<!-- 검색 및 필터 -->
 	<div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-		<div class="flex flex-col items-center gap-4 md:flex-row">
-			<!-- 검색 -->
-			<div class="relative flex-1">
-				<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-				<input
-					type="text"
-					placeholder="골프장명, 코드, 지역으로 검색..."
-					bind:value={searchQuery}
-					class="w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				/>
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+			<div class="md:col-span-2">
+				<div class="relative">
+					<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+					<input type="text" placeholder="골프장명, 코드로 검색..." bind:value={searchQuery} class="w-full rounded-lg border-gray-300 py-2 pl-10 pr-4 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+				</div>
 			</div>
-
-			<!-- 상태 필터 -->
-			<div class="flex items-center gap-2">
-				<Filter class="h-4 w-4 text-gray-400" />
-				<select
-					bind:value={selectedStatus}
-					class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				>
-					<option value="all">전체 상태</option>
-					<option value="active">운영중</option>
-					<option value="inactive">비활성</option>
-					<option value="maintenance">정비중</option>
+			<div>
+				<select class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+					<option value="">지역 전체</option>
+					<option value="서울">서울</option>
+					<option value="경기">경기</option>
 				</select>
 			</div>
-
-			<!-- 정렬 -->
-			<div class="flex items-center gap-2">
-				<select
-					bind:value={sortBy}
-					class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				>
-					<option value="lastModified">최근 수정순</option>
-					<option value="courseName">이름순</option>
-					<option value="createdAt">등록순</option>
-					<option value="totalCarts">카트 수순</option>
+			<div>
+				<select class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+					<option value="">홀 수 전체</option>
+					<option value="9">9홀</option>
+					<option value="18">18홀</option>
+					<option value="27">27홀</option>
+					<option value="36">36홀</option>
 				</select>
-
-				<button
-					on:click={() => (sortOrder = sortOrder === 'asc' ? 'desc' : 'asc')}
-					class="rounded-lg border border-gray-300 p-2 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
-				>
-					{sortOrder === 'asc' ? '↑' : '↓'}
-				</button>
 			</div>
 		</div>
 	</div>
 
 	<!-- 골프장 목록 테이블 -->
-	<div
-		class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-	>
+	<div class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
 		<div class="overflow-x-auto">
 			<table class="w-full">
 				<thead class="bg-gray-50 dark:bg-gray-700">
 					<tr>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">골프장 정보</th>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">주소</th>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">운영 정보</th>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">상태</th>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">최근 수정</th>
-						<th class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">작업</th>
+						<th class="p-4"><input type="checkbox" class="rounded" /></th>
+						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">골프장명</th>
+						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">지역</th>
+						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">홀수</th>
+						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">카트수</th>
+						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">상태</th>
+						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">등록일</th>
+						<th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">작업</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
 					{#each filteredCourses as course (course.id)}
 						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-							<!-- 골프장 정보 -->
+							<td class="p-4"><input type="checkbox" class="rounded" /></td>
 							<td class="px-6 py-4">
-								<div>
-									<div class="text-sm font-medium text-gray-900 dark:text-white">{course.courseName}</div>
-									<div class="text-sm text-gray-500 dark:text-gray-400">{course.courseCode}</div>
-								</div>
+								<div class="font-medium text-gray-900 dark:text-white">{course.courseName}</div>
+								<div class="text-sm text-gray-500 dark:text-gray-400">{course.courseCode}</div>
 							</td>
-
-							<!-- 주소 -->
-							<td class="px-6 py-4">
-								<div class="text-sm text-gray-900 dark:text-white">{course.address.address1}</div>
-								<div class="text-sm text-gray-500 dark:text-gray-400">{course.address.zipcode}</div>
-							</td>
-
-							<!-- 운영 정보 -->
-							<td class="px-6 py-4">
-								<div class="text-sm text-gray-900 dark:text-white">{course.operation.totalHoles}홀</div>
-								<div class="text-sm text-gray-500 dark:text-gray-400">카트 {course.activeCarts}/{course.totalCarts}</div>
-							</td>
-
-							<!-- 상태 -->
+							<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">{course.address.address1.split(' ')[0]}</td>
+							<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">{course.operation.totalHoles}홀</td>
+							<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">{course.totalCarts}대</td>
 							<td class="px-6 py-4">
 								<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {getStatusInfo(course.status).color}">
 									{getStatusInfo(course.status).text}
 								</span>
 							</td>
-
-							<!-- 최근 수정 -->
-							<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-								{formatDate(course.lastModified)}
-							</td>
-
-							<!-- 작업 버튼들 -->
+							<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{formatDate(course.createdAt)}</td>
 							<td class="px-6 py-4 text-right">
 								<div class="flex items-center justify-end gap-2">
-									<button on:click={() => handleView(course)} title="상세보기" class="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-										<Eye class="h-4 w-4" />
-									</button>
-									<button on:click={() => handleEdit(course)} title="수정" class="p-1.5 text-gray-400 hover:text-green-600 dark:hover:text-green-400">
-										<Edit class="h-4 w-4" />
-									</button>
-									<button on:click={() => handleDelete(course)} title="삭제" class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400">
-										<Trash2 class="h-4 w-4" />
-									</button>
+									<button on:click={() => handleView(course)} title="상세보기" class="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"><Eye class="h-4 w-4" /></button>
+									<button on:click={() => handleEdit(course)} title="수정" class="p-1.5 text-gray-400 hover:text-green-600 dark:hover:text-green-400"><Edit class="h-4 w-4" /></button>
+									<button on:click={() => handleDelete(course)} title="삭제" class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400"><Trash2 class="h-4 w-4" /></button>
 								</div>
 							</td>
 						</tr>
