@@ -33,7 +33,6 @@
 
 	let formData = getInitialFormData();
 	$: isReadOnly = modalMode === 'view';
-
 	// 하드웨어 선택에 따른 운행모드 자동 계산
 	$: {
 		const modes = ['manual'];
@@ -129,7 +128,6 @@
 					{/each}
 				</div>
 			</div>
-
 			<!-- 성능 사양 -->
 			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
 				<h3 class="font-semibold dark:text-white">성능 사양</h3>

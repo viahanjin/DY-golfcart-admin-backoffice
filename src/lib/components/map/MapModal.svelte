@@ -88,7 +88,6 @@
 				<div><label for="imageFile" class="dark:text-gray-300">맵 이미지 파일 (PNG, JPG)</label><input id="imageFile" type="text" placeholder="파일 경로..." bind:value={formData.mapFiles.imageFile} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
 				<div><label for="metadataFile" class="dark:text-gray-300">메타데이터 파일 (JSON)</label><input id="metadataFile" type="text" placeholder="파일 경로..." bind:value={formData.mapFiles.metadataFile} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
 			</div>
-
 			<!-- 맵 상태 및 관리 -->
 			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
 				<h3 class="font-semibold dark:text-white">맵 상태 및 관리</h3>
