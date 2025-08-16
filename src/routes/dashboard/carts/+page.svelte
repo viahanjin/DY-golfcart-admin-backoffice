@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Plus, Search, Filter, Edit, Trash2, Eye } from 'lucide-svelte';
+	import { Plus, Search, Filter, Edit, Trash2, Eye, Car, Download } from 'lucide-svelte';
 	import mockCarts from '$lib/mock/carts.json';
 	import CartModal from '$lib/components/cart/CartModal.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -107,84 +107,233 @@
 	<!-- 헤더 -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="mb-1 text-2xl font-bold">카트 관리</h1>
-			<p class="text-gray-600">골프장에 등록된 카트의 정보를 관리합니다.</p>
+			<h1 class="mb-1 text-2xl font-bold text-gray-900 dark:text-white">카트 관리</h1>
+			<p class="text-gray-600 dark:text-gray-400">골프장에 등록된 카트의 정보를 관리합니다.</p>
 		</div>
-		<button on:click={handleCreate} class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-			<Plus class="h-4 w-4" />
-			새 카트 등록
-		</button>
 	</div>
 
-	<!-- 검색 및 필터 -->
-	<div class="rounded-lg border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-			<div class="md:col-span-2">
-				<div class="relative">
-					<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-					<input type="text" placeholder="카트 ID, 이름으로 검색..." bind:value={searchQuery} class="w-full rounded-lg border-gray-300 py-2 pl-10 pr-4 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+	<!-- 통계 카드 -->
+	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+		<div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+			<div class="flex items-center">
+				<Car class="h-8 w-8 text-blue-500" />
+				<div class="ml-3">
+					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">전체 카트</p>
+					<p class="text-2xl font-bold text-gray-900 dark:text-white">{carts.length}</p>
 				</div>
 			</div>
-			<div>
-				<select class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-					<option value="all">골프장 전체</option>
-					<option value="1">서울 컨트리클럽</option>
-				</select>
+		</div>
+		<div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+			<div class="flex items-center">
+				<div class="h-8 w-8 rounded bg-green-100 p-2 dark:bg-green-900/50">
+					<div class="h-4 w-4 rounded-full bg-green-500"></div>
+				</div>
+				<div class="ml-3">
+					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">운행 가능</p>
+					<p class="text-2xl font-bold text-gray-900 dark:text-white">
+						{carts.filter(c => c.cartStatus.currentState === 'available').length}
+					</p>
+				</div>
 			</div>
-			<div>
-				<select bind:value={selectedStatus} class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-					<option value="all">상태 전체</option>
-					<option value="available">운행 가능</option>
-					<option value="maintenance">정비 중</option>
-				</select>
+		</div>
+		<div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+			<div class="flex items-center">
+				<div class="h-8 w-8 rounded bg-yellow-100 p-2 dark:bg-yellow-900/50">
+					<div class="h-4 w-4 rounded-full bg-yellow-500"></div>
+				</div>
+				<div class="ml-3">
+					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">정비 중</p>
+					<p class="text-2xl font-bold text-gray-900 dark:text-white">
+						{carts.filter(c => c.cartStatus.currentState === 'maintenance').length}
+					</p>
+				</div>
+			</div>
+		</div>
+		<div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+			<div class="flex items-center">
+				<div class="h-8 w-8 rounded bg-red-100 p-2 dark:bg-red-900/50">
+					<div class="h-4 w-4 rounded-full bg-red-500"></div>
+				</div>
+				<div class="ml-3">
+					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">고장</p>
+					<p class="text-2xl font-bold text-gray-900 dark:text-white">
+						{carts.filter(c => c.cartStatus.currentState === 'broken').length}
+					</p>
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- TODO: 카드 뷰 구현 -->
-	<!-- 카트 목록 테이블 -->
-	<div class="overflow-hidden rounded-lg border bg-white dark:border-gray-700 dark:bg-gray-800">
-		<div class="overflow-x-auto">
-			<table class="w-full">
-				<thead class="bg-gray-50 dark:bg-gray-700">
-					<tr>
-						<th class="p-4"><input type="checkbox" class="rounded" /></th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">카트ID</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">하드웨어</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">상태</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">배터리</th>
-						<th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">작업</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y dark:divide-gray-700">
-					{#each filteredCarts as cart (cart.id)}
-						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-							<td class="p-4"><input type="checkbox" class="rounded" /></td>
-							<td class="px-6 py-4">
-								<div class="font-medium text-gray-900 dark:text-white">{cart.id}</div>
-								<div class="text-sm text-gray-500">{cart.cartName}</div>
-							</td>
-							<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-								{#if cart.hardware.acu}ACU{:else if cart.hardware.vcu}VCU{:else}MCU{/if}
-							</td>
-							<td class="px-6 py-4">
-								<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {getStatusInfo(cart.cartStatus.currentState).color}">
-									{getStatusInfo(cart.cartStatus.currentState).text}
-								</span>
-							</td>
-							<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">{cart.capabilities.battery.capacity}</td>
-							<td class="px-6 py-4 text-right">
-								<div class="flex items-center justify-end gap-2">
-									<button on:click={() => handleView(cart)} title="상세보기" class="p-1.5 text-gray-400 hover:text-blue-600"><Eye class="h-4 w-4" /></button>
-									<button on:click={() => handleEdit(cart)} title="수정" class="p-1.5 text-gray-400 hover:text-green-600"><Edit class="h-4 w-4" /></button>
-									<button on:click={() => handleDelete(cart)} title="삭제" class="p-1.5 text-gray-400 hover:text-red-600"><Trash2 class="h-4 w-4" /></button>
-								</div>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
+	<!-- 필터 및 액션 바 -->
+	<div class="mb-4 flex flex-col gap-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:flex-row sm:items-center sm:justify-between">
+		<div class="flex flex-1 gap-2">
+			<!-- 검색 -->
+			<div class="relative flex-1 sm:max-w-xs">
+				<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+				<input
+					type="text"
+					bind:value={searchQuery}
+					placeholder="카트 ID, 이름으로 검색..."
+					class="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+				/>
+			</div>
+
+			<!-- 골프장 필터 -->
+			<select
+				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+			>
+				<option value="all">전체 골프장</option>
+				<option value="1">서울 컨트리클럽</option>
+				<option value="2">부산 오션뷰 골프장</option>
+			</select>
+
+			<!-- 상태 필터 -->
+			<select
+				bind:value={selectedStatus}
+				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+			>
+				<option value="all">전체 상태</option>
+				<option value="available">운행 가능</option>
+				<option value="maintenance">정비 중</option>
+				<option value="broken">고장</option>
+				<option value="unavailable">미사용</option>
+			</select>
 		</div>
+
+		<div class="flex gap-2">
+			<button
+				class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+			>
+				<Download class="h-4 w-4" />
+				엑셀
+			</button>
+			
+			<button
+				on:click={handleCreate}
+				class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+			>
+				<Plus class="h-4 w-4" />
+				카트 추가
+			</button>
+		</div>
+	</div>
+
+	<!-- 테이블 -->
+	<div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+		{#if filteredCarts.length === 0}
+			<div class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+				<Car class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+				<p class="text-lg font-medium">등록된 카트가 없습니다</p>
+				<p class="mt-1 text-sm">새로운 카트를 추가해주세요.</p>
+			</div>
+		{:else}
+			<div class="overflow-x-auto">
+				<table class="w-full">
+					<thead class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+						<tr>
+							<th class="px-4 py-3 text-left">
+								<button
+									class="flex items-center gap-2 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
+								>
+									<input type="checkbox" class="h-4 w-4 rounded" />
+								</button>
+							</th>
+							<th class="px-4 py-3 text-left">
+								<button
+									class="flex items-center gap-1 font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400"
+								>
+									카트 정보
+								</button>
+							</th>
+							<th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-200">할당 골프장</th>
+							<th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-200">하드웨어</th>
+							<th class="px-4 py-3 text-left">
+								<button
+									class="flex items-center gap-1 font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400"
+								>
+									상태
+								</button>
+							</th>
+							<th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-200">배터리</th>
+							<th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-200">최근 점검</th>
+							<th class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-200">액션</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+						{#each filteredCarts as cart (cart.id)}
+							<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+								<td class="px-4 py-3">
+									<button
+										class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
+									>
+										<input type="checkbox" class="h-4 w-4 rounded" />
+									</button>
+								</td>
+								<td class="px-4 py-3">
+									<div>
+										<p class="font-medium text-gray-900 dark:text-white">{cart.id}</p>
+										<p class="text-sm text-gray-500 dark:text-gray-400">{cart.cartName || '이름 없음'}</p>
+									</div>
+								</td>
+								<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+									{#if cart.assignedGolfCourseId === '1'}서울 컨트리클럽
+									{:else if cart.assignedGolfCourseId === '2'}부산 오션뷰 골프장
+									{:else}미할당{/if}
+								</td>
+								<td class="px-4 py-3">
+									<div class="text-sm text-gray-900 dark:text-white">
+										{#if cart.hardware.acu}ACU
+										{:else if cart.hardware.vcu}VCU
+										{:else if cart.hardware.vpu}VPU
+										{:else}MCU{/if}
+									</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400">
+										{cart.manufacturer} {cart.modelYear}
+									</div>
+								</td>
+								<td class="px-4 py-3">
+									<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusInfo(cart.cartStatus.currentState).color}">
+										{getStatusInfo(cart.cartStatus.currentState).text}
+									</span>
+								</td>
+								<td class="px-4 py-3">
+									<div class="text-sm text-gray-900 dark:text-white">{cart.capabilities.battery.capacity}</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400">{cart.capabilities.battery.type}</div>
+								</td>
+								<td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+									{cart.cartStatus.lastInspection || '점검 기록 없음'}
+								</td>
+								<td class="px-4 py-3">
+									<div class="flex items-center justify-center gap-1">
+										<button
+											on:click={() => handleView(cart)}
+											class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700"
+											title="상세보기"
+										>
+											<Eye class="h-4 w-4" />
+										</button>
+										<button
+											on:click={() => handleEdit(cart)}
+											class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700"
+											title="수정"
+										>
+											<Edit class="h-4 w-4" />
+										</button>
+										<button
+											on:click={() => handleDelete(cart)}
+											class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700"
+											title="삭제"
+										>
+											<Trash2 class="h-4 w-4" />
+										</button>
+									</div>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	</div>
 </div>
 

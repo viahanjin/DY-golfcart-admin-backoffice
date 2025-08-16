@@ -65,19 +65,19 @@ export const MENU_ITEMS: NavMenuItem[] = [
 			}
 		]
 	},
-	{
-		id: 'course-management',
-		label: '코스 관리',
-		icon: Route,
-		children: [
-			{
-				id: 'course-list',
-				label: '코스 목록',
-				icon: List,
-				path: '/dashboard/courses'
-			}
-		]
-	},
+	// {
+	// 	id: 'course-management',
+	// 	label: '코스 관리',
+	// 	icon: Route,
+	// 	children: [
+	// 		{
+	// 			id: 'course-list',
+	// 			label: '코스 목록',
+	// 			icon: List,
+	// 			path: '/dashboard/courses'
+	// 		}
+	// 	]
+	// },
 	{
 		id: 'map-management',
 		label: '맵 관리',

@@ -39,7 +39,7 @@
 
 		<!-- 다이얼로그 내용 -->
 		<div class="px-6 pb-4">
-			<p class="text-gray-600 dark:text-gray-400">
+			<p class="text-gray-600 dark:text-gray-300">
 				{message}
 			</p>
 		</div>
