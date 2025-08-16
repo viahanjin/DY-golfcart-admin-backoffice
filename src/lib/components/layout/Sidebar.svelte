@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { MENU_ITEMS, type NavMenuItem } from '../../constants/navigation';
+	import { MENU_ITEMS, type NavMenuItem } from '$lib/constants/navigation';
 	import { ChevronDown } from 'lucide-svelte';
 	import { slide } from 'svelte/transition';
 
