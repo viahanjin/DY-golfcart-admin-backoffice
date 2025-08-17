@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { X } from 'lucide-svelte';
+	import BaseModal from '$lib/components/common/BaseModal.svelte';
 
 	export let modalMode: 'create' | 'edit' | 'view';
 	export let selectedCart: any = null;
@@ -59,10 +59,6 @@
 		}
 	}
 
-	function handleClose() {
-		dispatch('close');
-	}
-
 	const sensorOptions = [
 		{ id: '3d-lidar', label: '3D LiDAR' },
 		{ id: 'stereo-camera', label: '스테레오 카메라' },
@@ -73,90 +69,82 @@
 	];
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-	<div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white dark:bg-gray-800">
-		<!-- 헤더 -->
-		<div class="flex items-center justify-between border-b p-6 dark:border-gray-700">
-			<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-				{modalMode === 'create' ? '새 카트 등록' : modalMode === 'edit' ? '카트 정보 수정' : '카트 상세 정보'}
-			</h2>
-			<button on:click={handleClose} class="p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 rounded-lg"><X class="h-5 w-5" /></button>
-		</div>
+<BaseModal size="3xl" on:close={() => dispatch('close')}>
+	<span slot="title">
+		{modalMode === 'create' ? '새 카트 등록' : modalMode === 'edit' ? '카트 정보 수정' : '카트 상세 정보'}
+	</span>
 
-		<!-- 폼 -->
-		<div class="space-y-6 p-6">
-			<!-- 기본 정보 -->
-			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-				<h3 class="font-semibold dark:text-white">카트 기본 정보</h3>
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<div><label for="cartId" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">카트 ID *</label><input id="cartId" type="text" bind:value={formData.id} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-					<div><label for="cartName" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">카트명/별명</label><input id="cartName" type="text" bind:value={formData.cartName} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-					<div><label for="manufacturer" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">제조사</label><input id="manufacturer" type="text" bind:value={formData.manufacturer} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-					<div><label for="modelYear" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">제조년도</label><input id="modelYear" type="text" bind:value={formData.modelYear} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-					<div><label for="assignedGolfCourseId" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">할당 골프장 *</label>
-						<select id="assignedGolfCourseId" bind:value={formData.assignedGolfCourseId} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-							<option value="">선택하세요</option>
-							<option value="1">서울 컨트리클럽</option>
-							<option value="2">부산 오션뷰 골프장</option>
-						</select>
-					</div>
-				</div>
-			</div>
-
-			<!-- 하드웨어 및 센서 -->
-			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-					<h3 class="font-semibold dark:text-white">제어 모듈 구성</h3>
-					{#each Object.keys(formData.hardware) as key}
-						<div class="flex items-center gap-2">
-							<input type="checkbox" id="hw-{key}" bind:checked={formData.hardware[key]} disabled={isReadOnly} class="h-4 w-4 rounded" />
-							<label for="hw-{key}" class="uppercase text-gray-700 dark:text-gray-200">{key}</label>
-						</div>
-					{/each}
-					<div class="mt-2 text-sm text-gray-700 dark:text-gray-200">
-						<span class="font-semibold">지원 운행 모드:</span>
-						<span class="text-blue-600 dark:text-blue-400">{formData.capabilities.supportedModes.join(', ')}</span>
-					</div>
-				</div>
-				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-					<h3 class="font-semibold dark:text-white">센서 구성</h3>
-					{#each sensorOptions as sensor}
-						<div class="flex items-center gap-2">
-							<input type="checkbox" id="sensor-{sensor.id}" value={sensor.id} bind:group={formData.sensors} disabled={isReadOnly} class="h-4 w-4 rounded" />
-							<label for="sensor-{sensor.id}" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">{sensor.label}</label>
-						</div>
-					{/each}
-				</div>
-			</div>
-			<!-- 성능 사양 -->
-			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-				<h3 class="font-semibold dark:text-white">성능 사양</h3>
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<div><label for="maxSpeed" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">최대 운행 속도 (km/h)</label><input id="maxSpeed" type="number" bind:value={formData.capabilities.maxSpeed} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-					<div><label for="batteryCapacity" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">배터리 용량 (kWh)</label><input id="batteryCapacity" type="text" bind:value={formData.capabilities.battery.capacity} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-				</div>
-			</div>
-
-			<!-- 통신 설정 -->
-			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-				<h3 class="font-semibold dark:text-white">통신 설정</h3>
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<div><label for="macAddress" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">MAC 주소</label><input id="macAddress" type="text" bind:value={formData.network.macAddress} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-					<div><label for="clientId" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">MQTT Client ID</label><input id="clientId" type="text" bind:value={formData.mqtt.clientId} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+	<div class="space-y-6">
+		<!-- 기본 정보 -->
+		<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+			<h3 class="font-semibold dark:text-white">카트 기본 정보</h3>
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<div><label for="cartId" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">카트 ID *</label><input id="cartId" type="text" bind:value={formData.id} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				<div><label for="cartName" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">카트명/별명</label><input id="cartName" type="text" bind:value={formData.cartName} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				<div><label for="manufacturer" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">제조사</label><input id="manufacturer" type="text" bind:value={formData.manufacturer} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				<div><label for="modelYear" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">제조년도</label><input id="modelYear" type="text" bind:value={formData.modelYear} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				<div><label for="assignedGolfCourseId" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">할당 골프장 *</label>
+					<select id="assignedGolfCourseId" bind:value={formData.assignedGolfCourseId} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+						<option value="">선택하세요</option>
+						<option value="1">서울 컨트리클럽</option>
+						<option value="2">부산 오션뷰 골프장</option>
+					</select>
 				</div>
 			</div>
 		</div>
 
-		<!-- 푸터 -->
-		<div class="flex items-center justify-end gap-3 border-t px-6 py-4 dark:border-gray-700">
-			{#if !isReadOnly}
-				<button on:click={handleClose} class="rounded-lg border bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">취소</button>
-				<button on:click={handleSave} class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-					{modalMode === 'create' ? '등록' : '수정'}
-				</button>
-			{:else}
-				<button on:click={handleClose} class="rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700">닫기</button>
-			{/if}
+		<!-- 하드웨어 및 센서 -->
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold dark:text-white">제어 모듈 구성</h3>
+				{#each Object.keys(formData.hardware) as key}
+					<div class="flex items-center gap-2">
+						<input type="checkbox" id="hw-{key}" bind:checked={formData.hardware[key]} disabled={isReadOnly} class="h-4 w-4 rounded" />
+						<label for="hw-{key}" class="uppercase text-gray-700 dark:text-gray-200">{key}</label>
+					</div>
+				{/each}
+				<div class="mt-2 text-sm text-gray-700 dark:text-gray-200">
+					<span class="font-semibold">지원 운행 모드:</span>
+					<span class="text-blue-600 dark:text-blue-400">{formData.capabilities.supportedModes.join(', ')}</span>
+				</div>
+			</div>
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold dark:text-white">센서 구성</h3>
+				{#each sensorOptions as sensor}
+					<div class="flex items-center gap-2">
+						<input type="checkbox" id="sensor-{sensor.id}" value={sensor.id} bind:group={formData.sensors} disabled={isReadOnly} class="h-4 w-4 rounded" />
+						<label for="sensor-{sensor.id}" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">{sensor.label}</label>
+					</div>
+				{/each}
+			</div>
+		</div>
+		<!-- 성능 사양 -->
+		<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+			<h3 class="font-semibold dark:text-white">성능 사양</h3>
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<div><label for="maxSpeed" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">최대 운행 속도 (km/h)</label><input id="maxSpeed" type="number" bind:value={formData.capabilities.maxSpeed} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				<div><label for="batteryCapacity" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">배터리 용량 (kWh)</label><input id="batteryCapacity" type="text" bind:value={formData.capabilities.battery.capacity} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+			</div>
+		</div>
+
+		<!-- 통신 설정 -->
+		<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+			<h3 class="font-semibold dark:text-white">통신 설정</h3>
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<div><label for="macAddress" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">MAC 주소</label><input id="macAddress" type="text" bind:value={formData.network.macAddress} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				<div><label for="clientId" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">MQTT Client ID</label><input id="clientId" type="text" bind:value={formData.mqtt.clientId} disabled={isReadOnly} class="w-full rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+			</div>
 		</div>
 	</div>
-</div>
+
+	<div slot="footer">
+		{#if !isReadOnly}
+			<button on:click={() => dispatch('close')} class="rounded-lg border bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">취소</button>
+			<button on:click={handleSave} class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+				{modalMode === 'create' ? '등록' : '수정'}
+			</button>
+		{:else}
+			<button on:click={() => dispatch('close')} class="rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700">닫기</button>
+		{/if}
+	</div>
+</BaseModal>

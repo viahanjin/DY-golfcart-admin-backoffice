@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { X } from 'lucide-svelte';
+	import BaseModal from '$lib/components/common/BaseModal.svelte';
 
 	export let modalMode: 'create' | 'edit' | 'view';
 	export let selectedCourse: any = null; // In a real app, this would be a proper type import
@@ -89,10 +89,6 @@
 		}
 	}
 
-	function handleClose() {
-		dispatch('close');
-	}
-
 	// TODO: 골프장명 중복 검사 API 호출
 	function handleDuplicateCheck() {
 		if (!formData.courseName.trim()) {
@@ -128,139 +124,116 @@
 	}
 </script>
 
-<!-- 모달 배경 -->
-<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-	<!-- 모달 창 -->
-	<div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white dark:bg-gray-800">
-		<!-- 모달 헤더 -->
-		<div
-			class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700"
-		>
-			<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-				{modalMode === 'create'
-					? '새 골프장 등록'
-					: modalMode === 'edit'
-						? '골프장 정보 수정'
-						: '골프장 상세 정보'}
-			</h2>
-			<button
-				on:click={handleClose}
-				class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-			>
-				<X class="h-5 w-5" />
-			</button>
-		</div>
+<BaseModal size="2xl" on:close={() => dispatch('close')}>
+	<span slot="title">
+		{modalMode === 'create'
+			? '새 골프장 등록'
+			: modalMode === 'edit'
+				? '골프장 정보 수정'
+				: '골프장 상세 정보'}
+	</span>
 
-		<!-- 모달 내용 -->
-		<div class="p-6">
-			{#if modalMode === 'view'}
-				<div class="border-b border-gray-200 dark:border-gray-600">
-					<nav class="-mb-px flex space-x-8" aria-label="Tabs">
-						<button class="whitespace-nowrap border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600 dark:text-blue-400">기본정보</button>
-						<button class="whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200">카트현황</button>
-						<button class="whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200">코스정보</button>
-					</nav>
-				</div>
-			{/if}
-			<div class="space-y-6 pt-6">
-				<!-- 기본 정보 섹션 -->
-				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-					<h3 class="font-semibold text-gray-900 dark:text-white">기본 정보</h3>
-					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-						<div class="col-span-2">
-							<label for="courseName" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">골프장명 (한글) *</label>
-							<div class="flex gap-2"><input id="courseName" type="text" bind:value={formData.courseName} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /><button on:click={handleDuplicateCheck} disabled={isReadOnly} class="btn-secondary whitespace-nowrap text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">중복 검사</button></div>
-						</div>
-						<div class="col-span-2"><label for="courseNameEn" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">골프장명 (영문)</label><input id="courseNameEn" type="text" bind:value={formData.courseNameEn} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-						<div class="col-span-2">
-							<label for="courseCode" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">골프장 코드 *</label>
-							<div class="flex gap-2"><input id="courseCode" type="text" bind:value={formData.courseCode} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /><button on:click={handleAutoGenerateCode} disabled={isReadOnly} class="btn-secondary whitespace-nowrap text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">자동 생성</button></div>
-						</div>
-						<div><label for="phone" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">대표 전화번호 *</label><input id="phone" type="tel" bind:value={formData.contact.phone} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-						<div><label for="email" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">이메일 *</label><input id="email" type="email" bind:value={formData.contact.email} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
-					</div>
-				</div>
-
-				<!-- 주소 및 위치 섹션 -->
-				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-					<h3 class="font-semibold text-gray-900 dark:text-white">주소 및 위치</h3>
-					<div class="flex gap-2">
-						<input type="text" placeholder="우편번호" bind:value={formData.address.zipcode} disabled={isReadOnly} class="w-1/3 rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-						<button on:click={handlePostcodeSearch} disabled={isReadOnly} class="btn-secondary text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">우편번호 찾기</button>
-					</div>
-					<input type="text" placeholder="주소" bind:value={formData.address.address1} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<input type="text" placeholder="상세주소" bind:value={formData.address.address2} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-						<input type="number" placeholder="위도 (Latitude)" bind:value={formData.location.latitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-						<input type="number" placeholder="경도 (Longitude)" bind:value={formData.location.longitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-					</div>
-					<button on:click={handleMapLocationSelect} disabled={isReadOnly} class="btn-secondary w-full text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">지도에서 위치 선택</button>
-				</div>
-
-				<!-- 운영 정보 섹션 -->
-				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-					<h3 class="font-semibold text-gray-900 dark:text-white">운영 정보</h3>
-					<div>
-						<label for="totalHoles" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">홀 수</label>
-						<select id="totalHoles" bind:value={formData.operation.totalHoles} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-							<option value={9}>9홀</option><option value={18}>18홀</option><option value={27}>27홀</option><option value={36}>36홀</option>
-						</select>
-					</div>
-					<div>
-						<label for="maxSpeed" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">최대 운행 속도: {formData.operation.cartPolicy.maxSpeed} km/h</label>
-						<input type="range" id="maxSpeed" bind:value={formData.operation.cartPolicy.maxSpeed} min="5" max="25" disabled={isReadOnly} class="w-full" />
-					</div>
-				</div>
-
-				<!-- 특이사항 및 환경 정보 -->
-				<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
-					<h3 class="font-semibold text-gray-900 dark:text-white">특이사항 및 환경</h3>
-					<div>
-						<label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">지형 특성</label>
-						<div class="flex gap-4">
-							<label class="flex items-center gap-2 text-gray-700 dark:text-gray-200"><input type="checkbox" value="flat" bind:group={formData.environment.terrain} class="rounded" /> 평지형</label>
-							<label class="flex items-center gap-2 text-gray-700 dark:text-gray-200"><input type="checkbox" value="hilly" bind:group={formData.environment.terrain} class="rounded" /> 구릉형</label>
-							<label class="flex items-center gap-2 text-gray-700 dark:text-gray-200"><input type="checkbox" value="mountainous" bind:group={formData.environment.terrain} class="rounded" /> 산악형</label>
-						</div>
-					</div>
-					<div>
-						<label for="specialNotes" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">특이사항 메모</label>
-						<textarea id="specialNotes" bind:value={formData.environment.specialNotes} disabled={isReadOnly} rows={3} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- 모달 푸터 -->
-		{#if !isReadOnly}
-			<div
-				class="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-gray-700"
-			>
-				<button
-					on:click={handleClose}
-					class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-				>
-					취소
-				</button>
-				<button
-					on:click={handleSave}
-					disabled={!formData.courseName || !formData.courseCode}
-					class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-				>
-					{modalMode === 'create' ? '등록' : '수정'}
-				</button>
-			</div>
-		{:else}
-			<div
-				class="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-gray-700"
-			>
-				<button
-					on:click={handleClose}
-					class="rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
-				>
-					닫기
-				</button>
+	<div class="space-y-6">
+		{#if modalMode === 'view'}
+			<div class="border-b border-gray-200 dark:border-gray-600">
+				<nav class="-mb-px flex space-x-8" aria-label="Tabs">
+					<button class="whitespace-nowrap border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600 dark:text-blue-400">기본정보</button>
+					<button class="whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200">카트현황</button>
+					<button class="whitespace-nowrap border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200">코스정보</button>
+				</nav>
 			</div>
 		{/if}
+		<div class="space-y-6 pt-2">
+			<!-- 기본 정보 섹션 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold text-gray-900 dark:text-white">기본 정보</h3>
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div class="col-span-2">
+						<label for="courseName" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">골프장명 (한글) *</label>
+						<div class="flex gap-2"><input id="courseName" type="text" bind:value={formData.courseName} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /><button on:click={handleDuplicateCheck} disabled={isReadOnly} class="btn-secondary whitespace-nowrap text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">중복 검사</button></div>
+					</div>
+					<div class="col-span-2"><label for="courseNameEn" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">골프장명 (영문)</label><input id="courseNameEn" type="text" bind:value={formData.courseNameEn} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+					<div class="col-span-2">
+						<label for="courseCode" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">골프장 코드 *</label>
+						<div class="flex gap-2"><input id="courseCode" type="text" bind:value={formData.courseCode} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /><button on:click={handleAutoGenerateCode} disabled={isReadOnly} class="btn-secondary whitespace-nowrap text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">자동 생성</button></div>
+					</div>
+					<div><label for="phone" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">대표 전화번호 *</label><input id="phone" type="tel" bind:value={formData.contact.phone} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+					<div><label for="email" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">이메일 *</label><input id="email" type="email" bind:value={formData.contact.email} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" /></div>
+				</div>
+			</div>
+
+			<!-- 주소 및 위치 섹션 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold text-gray-900 dark:text-white">주소 및 위치</h3>
+				<div class="flex gap-2">
+					<input type="text" placeholder="우편번호" bind:value={formData.address.zipcode} disabled={isReadOnly} class="w-1/3 rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+					<button on:click={handlePostcodeSearch} disabled={isReadOnly} class="btn-secondary text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">우편번호 찾기</button>
+				</div>
+				<input type="text" placeholder="주소" bind:value={formData.address.address1} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+				<input type="text" placeholder="상세주소" bind:value={formData.address.address2} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<input type="number" placeholder="위도 (Latitude)" bind:value={formData.location.latitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+					<input type="number" placeholder="경도 (Longitude)" bind:value={formData.location.longitude} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+				</div>
+				<button on:click={handleMapLocationSelect} disabled={isReadOnly} class="btn-secondary w-full text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">지도에서 위치 선택</button>
+			</div>
+
+			<!-- 운영 정보 섹션 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold text-gray-900 dark:text-white">운영 정보</h3>
+				<div>
+					<label for="totalHoles" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">홀 수</label>
+					<select id="totalHoles" bind:value={formData.operation.totalHoles} disabled={isReadOnly} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+						<option value={9}>9홀</option><option value={18}>18홀</option><option value={27}>27홀</option><option value={36}>36홀</option>
+					</select>
+				</div>
+				<div>
+					<label for="maxSpeed" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">최대 운행 속도: {formData.operation.cartPolicy.maxSpeed} km/h</label>
+					<input type="range" id="maxSpeed" bind:value={formData.operation.cartPolicy.maxSpeed} min="5" max="25" disabled={isReadOnly} class="w-full" />
+				</div>
+			</div>
+
+			<!-- 특이사항 및 환경 정보 -->
+			<div class="space-y-4 rounded-lg border p-4 dark:border-gray-700">
+				<h3 class="font-semibold text-gray-900 dark:text-white">특이사항 및 환경</h3>
+				<div>
+					<label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">지형 특성</label>
+					<div class="flex gap-4">
+						<label class="flex items-center gap-2 text-gray-700 dark:text-gray-200"><input type="checkbox" value="flat" bind:group={formData.environment.terrain} class="rounded" /> 평지형</label>
+						<label class="flex items-center gap-2 text-gray-700 dark:text-gray-200"><input type="checkbox" value="hilly" bind:group={formData.environment.terrain} class="rounded" /> 구릉형</label>
+						<label class="flex items-center gap-2 text-gray-700 dark:text-gray-200"><input type="checkbox" value="mountainous" bind:group={formData.environment.terrain} class="rounded" /> 산악형</label>
+					</div>
+				</div>
+				<div>
+					<label for="specialNotes" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">특이사항 메모</label>
+					<textarea id="specialNotes" bind:value={formData.environment.specialNotes} disabled={isReadOnly} rows={3} class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+				</div>
+			</div>
+		</div>
 	</div>
-</div>
+
+	<div slot="footer">
+		{#if !isReadOnly}
+			<button
+				on:click={() => dispatch('close')}
+				class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+			>
+				취소
+			</button>
+			<button
+				on:click={handleSave}
+				disabled={!formData.courseName || !formData.courseCode}
+				class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+			>
+				{modalMode === 'create' ? '등록' : '수정'}
+			</button>
+		{:else}
+			<button
+				on:click={() => dispatch('close')}
+				class="rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+			>
+				닫기
+			</button>
+		{/if}
+	</div>
+</BaseModal>

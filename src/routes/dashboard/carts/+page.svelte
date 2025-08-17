@@ -1,195 +1,178 @@
 <script lang="ts">
-	import { Plus, Search, Filter, Edit, Trash2, Eye, Car, Download } from 'lucide-svelte';
-	import mockCarts from '$lib/mock/carts.json';
+	import { onMount, onDestroy } from 'svelte';
+	import { cartStore, isLoading, errorMessage, selectedCount } from '$lib/stores/cart.store';
+	import type { Cart } from '$lib/types/cart';
+	import type { StatItem } from '$lib/components/common/StatsCards.svelte';
+	import type { ColumnDefinition } from '$lib/components/common/DataTable.svelte';
+
+	// Component Imports
+	import StatsCards from '$lib/components/common/StatsCards.svelte';
+	import FilterBar from '$lib/components/common/FilterBar.svelte';
+	import DataTable from '$lib/components/common/DataTable.svelte';
 	import CartModal from '$lib/components/cart/CartModal.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 
-	// 카트 데이터 타입 정의
-	interface Cart {
-		id: string;
-		cartName: string;
-		modelYear: string;
-		manufacturer: string;
-		assignedGolfCourseId: string;
-		hardware: { mcu: boolean; vcu: boolean; vpu: boolean; acu: boolean };
-		sensors: string[];
-		capabilities: {
-			supportedModes: string[];
-			maxSpeed: number;
-			battery: { type: string; capacity: string; expectedHours: number };
-		};
-		network: { macAddress: string; ip: string; isStatic: boolean };
-		mqtt: { clientId: string; qos: number };
-		cartStatus: {
-			currentState: 'available' | 'maintenance' | 'broken' | 'unavailable';
-			lastInspection: string;
-			nextInspection: string;
-		};
-	}
+	// Icon Imports
+	import { Car, CheckCircle, AlertTriangle, XCircle, Eye, Edit, Trash2, AlertCircle, X } from 'lucide-svelte';
 
-	let carts: Cart[] = mockCarts;
-
-	// 상태 관리
-	let searchQuery = '';
-	let selectedStatus = 'all';
-	let modalMode: 'create' | 'edit' | 'view' = 'create';
-	let selectedCart: Cart | null = null;
-	let showModal = false;
-	let showDeleteDialog = false;
-	let cartToDelete: Cart | null = null;
-
-	// 필터링된 카트 목록
-	$: filteredCarts = carts.filter((cart) => {
-		const matchesSearch =
-			cart.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			cart.cartName.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchesStatus = selectedStatus === 'all' || cart.cartStatus.currentState === selectedStatus;
-		return matchesSearch && matchesStatus;
+	// --- Store and State ---
+	let storeState: any;
+	const unsubscribeStore = cartStore.subscribe(value => {
+		storeState = value;
 	});
 
-	// 상태별 정보
-	function getStatusInfo(status: string) {
-		switch (status) {
-			case 'available':
-				return { color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/50', text: '운행 가능' };
-			case 'maintenance':
-				return { color: 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/50', text: '정비 중' };
-			case 'broken':
-				return { color: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/50', text: '고장' };
-			default:
-				return { color: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700', text: '미사용' };
-		}
-	}
+	let loading = false;
+	const unsubscribeLoading = isLoading.subscribe(value => loading = value);
 
-	// CRUD 액션
+	let error: string | null = null;
+	const unsubscribeError = errorMessage.subscribe(value => error = value);
+
+	let currentSelectedCount = 0;
+	const unsubscribeSelected = selectedCount.subscribe(value => currentSelectedCount = value);
+
+	// Modal and Dialog state
+	let showModal = false;
+	let modalMode: 'create' | 'edit' | 'view' = 'create';
+	let selectedCart: Cart | null = null;
+	let cartToDelete: Cart | null = null;
+	let showDeleteDialog = false;
+	let showBulkDeleteDialog = false;
+
+	// --- Lifecycle ---
+	onMount(() => {
+		cartStore.loadCarts();
+	});
+
+	onDestroy(() => {
+		unsubscribeStore();
+		unsubscribeLoading();
+		unsubscribeError();
+		unsubscribeSelected();
+	});
+
+	// --- Component Props ---
+	$: stats = storeState ? ([
+		{ label: '전체 카트', value: storeState.total, icon: Car, color: 'text-blue-500' },
+		{ label: '운행 가능', value: storeState.items.filter((c:Cart) => c.cartStatus.currentState === 'available').length, icon: CheckCircle, color: 'text-green-500' },
+		{ label: '정비 중', value: storeState.items.filter((c:Cart) => c.cartStatus.currentState === 'maintenance').length, icon: AlertTriangle, color: 'text-yellow-500' },
+		{ label: '고장', value: storeState.items.filter((c:Cart) => c.cartStatus.currentState === 'broken').length, icon: XCircle, color: 'text-red-500' }
+	] as StatItem[]) : [];
+
+	const columns: ColumnDefinition<Cart>[] = [
+		{ key: 'select', label: 'Select', class: 'w-12' },
+		{ key: 'id', label: '카트 ID', sortable: true },
+		{ key: 'cartName', label: '카트명', sortable: true },
+		{ key: 'assignedGolfCourseId', label: '할당 골프장' },
+		{ key: 'cartStatus.currentState', label: '상태', sortable: true, class: 'text-center' },
+		{ key: 'capabilities.battery.capacity', label: '배터리', class: 'text-center' },
+		{ key: 'cartStatus.lastInspection', label: '최근 점검' },
+		{ key: 'actions', label: '액션', class: 'w-24 text-center' }
+	];
+
+	// --- Event Handlers ---
 	function handleCreate() {
 		modalMode = 'create';
 		selectedCart = null;
 		showModal = true;
 	}
+
 	function handleView(cart: Cart) {
 		modalMode = 'view';
 		selectedCart = cart;
 		showModal = true;
 	}
+
 	function handleEdit(cart: Cart) {
 		modalMode = 'edit';
 		selectedCart = cart;
 		showModal = true;
 	}
+
 	function handleDelete(cart: Cart) {
 		cartToDelete = cart;
 		showDeleteDialog = true;
 	}
-	function confirmDelete() {
-		if (cartToDelete) {
-			// TODO: API 연동
-			carts = carts.filter((c) => c.id !== cartToDelete?.id);
+
+	async function handleModalSave(event: CustomEvent) {
+		const { mode, data } = event.detail;
+		let success = false;
+		if (mode === 'create') {
+			success = await cartStore.createCart(data);
+		} else if (mode === 'edit' && selectedCart) {
+			success = await cartStore.updateCart(selectedCart.id, data);
 		}
+		if (success) {
+			showModal = false;
+		}
+	}
+
+	async function confirmDelete() {
+		if (cartToDelete) {
+			await cartStore.deleteCart(cartToDelete.id);
+		}
+		cartToDelete = null;
 		showDeleteDialog = false;
 	}
-	function handleModalSave(event: CustomEvent) {
-		const { mode, data } = event.detail;
-		if (mode === 'create') {
-			carts = [...carts, data];
-		} else {
-			carts = carts.map((c) => (c.id === data.id ? data : c));
+
+	async function confirmBulkDelete() {
+		await cartStore.bulkDelete();
+		showBulkDeleteDialog = false;
+	}
+
+	// --- Helper Functions ---
+	function getStatusInfo(status: string) {
+		switch (status) {
+			case 'available': return { color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/50', text: '운행 가능' };
+			case 'maintenance': return { color: 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/50', text: '정비 중' };
+			case 'broken': return { color: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/50', text: '고장' };
+			default: return { color: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700', text: '미사용' };
 		}
-		showModal = false;
 	}
 </script>
 
-<svelte:head>
-	<title>카트 관리 - 골프카트 관제 시스템</title>
-</svelte:head>
-
-<div class="space-y-6 p-6">
-	<!-- 헤더 -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="mb-1 text-2xl font-bold text-gray-900 dark:text-white">카트 관리</h1>
-			<p class="text-gray-600 dark:text-gray-400">골프장에 등록된 카트의 정보를 관리합니다.</p>
-		</div>
+{#if storeState}
+<div class="p-4 md:p-6">
+	<!-- Header -->
+	<div class="mb-6">
+		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">카트 관리</h1>
+		<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+			골프장에 등록된 카트의 정보를 관리합니다.
+		</p>
 	</div>
 
-	<!-- 통계 카드 -->
-	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		<div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
+	<!-- Error Message -->
+	{#if error}
+		<div class="mb-4 flex items-center justify-between rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
 			<div class="flex items-center">
-				<Car class="h-8 w-8 text-blue-500" />
-				<div class="ml-3">
-					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">전체 카트</p>
-					<p class="text-2xl font-bold text-gray-900 dark:text-white">{carts.length}</p>
-				</div>
+				<AlertCircle class="h-5 w-5 text-red-400" />
+				<p class="ml-3 text-sm text-red-800 dark:text-red-300">{error}</p>
 			</div>
+			<button on:click={cartStore.clearError} class="text-red-500 hover:text-red-700" aria-label="Close error message">
+				<X class="h-4 w-4" />
+			</button>
 		</div>
-		<div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
-			<div class="flex items-center">
-				<div class="h-8 w-8 rounded bg-green-100 p-2 dark:bg-green-900/50">
-					<div class="h-4 w-4 rounded-full bg-green-500"></div>
-				</div>
-				<div class="ml-3">
-					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">운행 가능</p>
-					<p class="text-2xl font-bold text-gray-900 dark:text-white">
-						{carts.filter(c => c.cartStatus.currentState === 'available').length}
-					</p>
-				</div>
-			</div>
-		</div>
-		<div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
-			<div class="flex items-center">
-				<div class="h-8 w-8 rounded bg-yellow-100 p-2 dark:bg-yellow-900/50">
-					<div class="h-4 w-4 rounded-full bg-yellow-500"></div>
-				</div>
-				<div class="ml-3">
-					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">정비 중</p>
-					<p class="text-2xl font-bold text-gray-900 dark:text-white">
-						{carts.filter(c => c.cartStatus.currentState === 'maintenance').length}
-					</p>
-				</div>
-			</div>
-		</div>
-		<div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
-			<div class="flex items-center">
-				<div class="h-8 w-8 rounded bg-red-100 p-2 dark:bg-red-900/50">
-					<div class="h-4 w-4 rounded-full bg-red-500"></div>
-				</div>
-				<div class="ml-3">
-					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">고장</p>
-					<p class="text-2xl font-bold text-gray-900 dark:text-white">
-						{carts.filter(c => c.cartStatus.currentState === 'broken').length}
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
+	{/if}
 
-	<!-- 필터 및 액션 바 -->
-	<div class="mb-4 flex flex-col gap-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:flex-row sm:items-center sm:justify-between">
-		<div class="flex flex-1 gap-2">
-			<!-- 검색 -->
-			<div class="relative flex-1 sm:max-w-xs">
-				<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-				<input
-					type="text"
-					bind:value={searchQuery}
-					placeholder="카트 ID, 이름으로 검색..."
-					class="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				/>
-			</div>
+	<!-- Stats Cards -->
+	<StatsCards {stats} />
 
-			<!-- 골프장 필터 -->
+	<!-- Filter Bar -->
+	<FilterBar
+		bind:searchValue={storeState.searchQuery}
+		searchPlaceholder="카트 ID, 이름 검색..."
+		createLabel="카트 추가"
+		selectedCount={currentSelectedCount}
+		loading={loading}
+		on:search={(e) => cartStore.search(e.detail)}
+		on:refresh={() => cartStore.loadCarts()}
+		on:create={handleCreate}
+		on:export={() => alert('엑셀 내보내기 기능은 준비중입니다.')}
+		on:bulkDelete={() => (showBulkDeleteDialog = true)}
+	>
+		<svelte:fragment slot="filters">
 			<select
-				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-			>
-				<option value="all">전체 골프장</option>
-				<option value="1">서울 컨트리클럽</option>
-				<option value="2">부산 오션뷰 골프장</option>
-			</select>
-
-			<!-- 상태 필터 -->
-			<select
-				bind:value={selectedStatus}
+				value={storeState.selectedStatus}
+				on:change={(e) => cartStore.changeFilter(e.currentTarget.value)}
 				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			>
 				<option value="all">전체 상태</option>
@@ -198,156 +181,87 @@
 				<option value="broken">고장</option>
 				<option value="unavailable">미사용</option>
 			</select>
+		</svelte:fragment>
+	</FilterBar>
+
+	<!-- Data Table -->
+	<DataTable
+		items={storeState.items}
+		{columns}
+		idKey="id"
+		loading={loading}
+		selectedItems={storeState.selectedItems}
+		sortBy={storeState.sortBy}
+		sortOrder={storeState.sortOrder}
+		page={storeState.page}
+		totalPages={storeState.totalPages}
+		totalItems={storeState.total}
+		on:sort={(e) => cartStore.changeSort(e.detail)}
+		on:select={(e) => cartStore.toggleSelection(e.detail)}
+		on:selectAll={cartStore.toggleSelectAll}
+		on:pageChange={(e) => cartStore.changePage(e.detail)}
+	>
+		<div slot="empty-state" class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+			<Car class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+			<p class="text-lg font-medium">등록된 카트가 없습니다</p>
+			<p class="mt-1 text-sm">새로운 카트를 추가해주세요.</p>
 		</div>
 
-		<div class="flex gap-2">
-			<button
-				class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-			>
-				<Download class="h-4 w-4" />
-				엑셀
-			</button>
-			
-			<button
-				on:click={handleCreate}
-				class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-			>
-				<Plus class="h-4 w-4" />
-				카트 추가
-			</button>
-		</div>
-	</div>
+		<svelte:fragment slot="cell-cartStatus.currentState" let:item>
+			{@const status = getStatusInfo(item.cartStatus.currentState)}
+			<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
+				{status.text}
+			</span>
+		</svelte:fragment>
 
-	<!-- 테이블 -->
-	<div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
-		{#if filteredCarts.length === 0}
-			<div class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-				<Car class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-				<p class="text-lg font-medium">등록된 카트가 없습니다</p>
-				<p class="mt-1 text-sm">새로운 카트를 추가해주세요.</p>
+		<svelte:fragment slot="cell-actions" let:item>
+			<div class="flex items-center justify-center gap-1">
+				<button on:click={() => handleView(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700" title="상세보기">
+					<Eye class="h-4 w-4" />
+				</button>
+				<button on:click={() => handleEdit(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700" title="수정">
+					<Edit class="h-4 w-4" />
+				</button>
+				<button on:click={() => handleDelete(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700" title="삭제">
+					<Trash2 class="h-4 w-4" />
+				</button>
 			</div>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full">
-					<thead class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-						<tr>
-							<th class="px-4 py-3 text-left">
-								<button
-									class="flex items-center gap-2 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
-								>
-									<input type="checkbox" class="h-4 w-4 rounded" />
-								</button>
-							</th>
-							<th class="px-4 py-3 text-left">
-								<button
-									class="flex items-center gap-1 font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400"
-								>
-									카트 정보
-								</button>
-							</th>
-							<th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-200">할당 골프장</th>
-							<th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-200">하드웨어</th>
-							<th class="px-4 py-3 text-left">
-								<button
-									class="flex items-center gap-1 font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400"
-								>
-									상태
-								</button>
-							</th>
-							<th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-200">배터리</th>
-							<th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-200">최근 점검</th>
-							<th class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-200">액션</th>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-						{#each filteredCarts as cart (cart.id)}
-							<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-								<td class="px-4 py-3">
-									<button
-										class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
-									>
-										<input type="checkbox" class="h-4 w-4 rounded" />
-									</button>
-								</td>
-								<td class="px-4 py-3">
-									<div>
-										<p class="font-medium text-gray-900 dark:text-white">{cart.id}</p>
-										<p class="text-sm text-gray-500 dark:text-gray-400">{cart.cartName || '이름 없음'}</p>
-									</div>
-								</td>
-								<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-									{#if cart.assignedGolfCourseId === '1'}서울 컨트리클럽
-									{:else if cart.assignedGolfCourseId === '2'}부산 오션뷰 골프장
-									{:else}미할당{/if}
-								</td>
-								<td class="px-4 py-3">
-									<div class="text-sm text-gray-900 dark:text-white">
-										{#if cart.hardware.acu}ACU
-										{:else if cart.hardware.vcu}VCU
-										{:else if cart.hardware.vpu}VPU
-										{:else}MCU{/if}
-									</div>
-									<div class="text-xs text-gray-500 dark:text-gray-400">
-										{cart.manufacturer} {cart.modelYear}
-									</div>
-								</td>
-								<td class="px-4 py-3">
-									<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusInfo(cart.cartStatus.currentState).color}">
-										{getStatusInfo(cart.cartStatus.currentState).text}
-									</span>
-								</td>
-								<td class="px-4 py-3">
-									<div class="text-sm text-gray-900 dark:text-white">{cart.capabilities.battery.capacity}</div>
-									<div class="text-xs text-gray-500 dark:text-gray-400">{cart.capabilities.battery.type}</div>
-								</td>
-								<td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-									{cart.cartStatus.lastInspection || '점검 기록 없음'}
-								</td>
-								<td class="px-4 py-3">
-									<div class="flex items-center justify-center gap-1">
-										<button
-											on:click={() => handleView(cart)}
-											class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700"
-											title="상세보기"
-										>
-											<Eye class="h-4 w-4" />
-										</button>
-										<button
-											on:click={() => handleEdit(cart)}
-											class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700"
-											title="수정"
-										>
-											<Edit class="h-4 w-4" />
-										</button>
-										<button
-											on:click={() => handleDelete(cart)}
-											class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700"
-											title="삭제"
-										>
-											<Trash2 class="h-4 w-4" />
-										</button>
-									</div>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
-	</div>
+		</svelte:fragment>
+	</DataTable>
 </div>
-
-<!-- 모달 -->
-{#if showModal}
-	<CartModal {modalMode} {selectedCart} on:save={handleModalSave} on:close={() => (showModal = false)} />
 {/if}
 
-<!-- 삭제 확인 다이얼로그 -->
+<!-- Modals and Dialogs -->
+{#if showModal}
+	<CartModal
+		{modalMode}
+		{selectedCart}
+		on:close={() => (showModal = false)}
+		on:save={handleModalSave}
+	/>
+{/if}
+
 {#if showDeleteDialog}
 	<ConfirmDialog
 		title="카트 삭제"
-		message={`'${cartToDelete?.cartName}' 카트를 정말 삭제하시겠습니까?`}
+		message={`정말로 카트 '${cartToDelete?.id}'를 삭제하시겠습니까?`}
+		confirmText="삭제"
+		danger={true}
 		on:confirm={confirmDelete}
-		on:cancel={() => (showDeleteDialog = false)}
+		on:cancel={() => {
+			showDeleteDialog = false;
+			cartToDelete = null;
+		}}
+	/>
+{/if}
+
+{#if showBulkDeleteDialog}
+	<ConfirmDialog
+		title="선택 항목 삭제"
+		message={`선택한 ${currentSelectedCount}개의 카트를 삭제하시겠습니까?`}
+		confirmText="모두 삭제"
+		danger={true}
+		on:confirm={confirmBulkDelete}
+		on:cancel={() => (showBulkDeleteDialog = false)}
 	/>
 {/if}
