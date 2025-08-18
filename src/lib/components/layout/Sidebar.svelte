@@ -48,11 +48,11 @@
 						<div class="flex items-center gap-3">
 							<svelte:component this={item.icon} class="h-5 w-5 {isParentActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}" />
 							{#if isOpen}
-								<span class="font-medium {isParentActive ? 'text-blue-600 dark:text-blue-300' : 'dark:text-gray-300'}">{item.label}</span>
+								<span class="font-medium {isParentActive ? 'text-blue-600 dark:text-blue-300' : 'text-gray-700 dark:text-gray-200'}">{item.label}</span>
 							{/if}
 						</div>
 						{#if isOpen}
-							<ChevronDown class="h-5 w-5 transform transition-transform duration-200 {openMenus[item.id] ? 'rotate-180' : ''}" />
+							<ChevronDown class="h-5 w-5 transform transition-transform duration-200 text-gray-500 dark:text-gray-400 {openMenus[item.id] ? 'rotate-180' : ''}" />
 						{/if}
 					</button>
 					{#if openMenus[item.id] && isOpen}
@@ -60,7 +60,7 @@
 							{#each item.children as child (child.id)}
 								{@const isChildActive = child.path === $page.url.pathname}
 								<li>
-									<a href={child.path} class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 {isChildActive ? 'font-semibold text-blue-600 dark:text-blue-300' : 'dark:text-gray-400'}">
+									<a href={child.path} class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 {isChildActive ? 'font-semibold text-blue-600 dark:text-blue-300' : 'text-gray-600 dark:text-gray-300'}">
 										<svelte:component this={child.icon} class="h-4 w-4" />
 										{child.label}
 									</a>
@@ -71,7 +71,7 @@
 				</div>
 			{:else}
 				<!-- 하위 메뉴가 없는 경우 -->
-				<a href={item.path} class="group flex items-center gap-3 rounded-lg px-4 py-2 {isActive ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}">
+				<a href={item.path} class="group flex items-center gap-3 rounded-lg px-4 py-2 {isActive ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'}">
 					<svelte:component this={item.icon} class="h-5 w-5 {isActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}" />
 					{#if isOpen}
 						<span class="font-medium">{item.label}</span>

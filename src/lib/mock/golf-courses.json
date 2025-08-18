@@ -97,5 +97,189 @@
 		"status": "active",
 		"lastModified": "2025-01-14T15:20:00Z",
 		"createdAt": "2024-08-20T11:30:00Z"
+	},
+	{
+		"id": "3",
+		"courseName": "제주 드림랜드 골프장",
+		"courseNameEn": "Jeju Dreamland Golf Club",
+		"courseCode": "JDG003",
+		"address": {
+			"zipcode": "63082",
+			"address1": "제주특별자치도 서귀포시 안덕면 산록남로 863",
+			"address2": ""
+		},
+		"contact": {
+			"phone": "064-792-5000",
+			"email": "info@jejudreamland.co.kr"
+		},
+		"location": {
+			"latitude": 33.2944,
+			"longitude": 126.3975,
+			"coordinateSystem": "WGS84"
+		},
+		"operation": {
+			"totalHoles": 18,
+			"operatingHours": {
+				"summer": "06:00 - 19:30",
+				"winter": "07:00 - 18:00"
+			},
+			"closedDays": "연중무휴",
+			"cartPolicy": {
+				"fairwayAccess": true,
+				"rainPolicy": "그린 위 운행 금지",
+				"maxSpeed": 20
+			}
+		},
+		"environment": {
+			"terrain": ["hilly", "ocean"],
+			"gpsShadedAreas": {
+				"count": 3,
+				"locations": "7번홀 그린, 14번홀 티박스, 16번홀 페어웨이"
+			},
+			"specialNotes": "바다 조망이 가능한 코스로 강풍 주의."
+		},
+		"totalCarts": 72,
+		"activeCarts": 58,
+		"status": "active",
+		"lastModified": "2025-01-13T08:45:00Z",
+		"createdAt": "2024-03-10T14:00:00Z"
+	},
+	{
+		"id": "4",
+		"courseName": "경기 파인밸리 골프클럽",
+		"courseNameEn": "Gyeonggi Pine Valley Golf Club",
+		"courseCode": "GPV004",
+		"address": {
+			"zipcode": "17315",
+			"address1": "경기도 이천시 백사면 송말로 456",
+			"address2": ""
+		},
+		"contact": {
+			"phone": "031-634-8200",
+			"email": "contact@pinevalley.co.kr"
+		},
+		"location": {
+			"latitude": 37.2736,
+			"longitude": 127.3145,
+			"coordinateSystem": "WGS84"
+		},
+		"operation": {
+			"totalHoles": 36,
+			"operatingHours": {
+				"summer": "05:30 - 19:00",
+				"winter": "06:30 - 17:30"
+			},
+			"closedDays": "매월 둘째, 넷째 월요일",
+			"cartPolicy": {
+				"fairwayAccess": true,
+				"rainPolicy": "부분 운행",
+				"maxSpeed": 18
+			}
+		},
+		"environment": {
+			"terrain": ["hilly", "forest"],
+			"gpsShadedAreas": {
+				"count": 5,
+				"locations": "숲속 구간 다수"
+			},
+			"specialNotes": "울창한 소나무 숲 사이의 코스로 GPS 음영 구간 다수."
+		},
+		"totalCarts": 120,
+		"activeCarts": 96,
+		"status": "active",
+		"lastModified": "2025-01-12T16:20:00Z",
+		"createdAt": "2024-01-15T10:00:00Z"
+	},
+	{
+		"id": "5",
+		"courseName": "대구 레이크사이드 골프장",
+		"courseNameEn": "Daegu Lakeside Golf Course",
+		"courseCode": "DLS005",
+		"address": {
+			"zipcode": "42993",
+			"address1": "대구광역시 달성군 화원읍 본리리 산 40-1",
+			"address2": ""
+		},
+		"contact": {
+			"phone": "053-611-7000",
+			"email": "info@lakeside-daegu.com"
+		},
+		"location": {
+			"latitude": 35.7972,
+			"longitude": 128.4894,
+			"coordinateSystem": "WGS84"
+		},
+		"operation": {
+			"totalHoles": 27,
+			"operatingHours": {
+				"summer": "06:00 - 19:00",
+				"winter": "07:00 - 17:30"
+			},
+			"closedDays": "매주 화요일",
+			"cartPolicy": {
+				"fairwayAccess": false,
+				"rainPolicy": "운행 중단",
+				"maxSpeed": 15
+			}
+		},
+		"environment": {
+			"terrain": ["flat", "water"],
+			"gpsShadedAreas": {
+				"count": 1,
+				"locations": "클럽하우스 주변"
+			},
+			"specialNotes": "호수를 끼고 있는 평지형 코스."
+		},
+		"totalCarts": 54,
+		"activeCarts": 38,
+		"status": "maintenance",
+		"lastModified": "2025-01-11T09:15:00Z",
+		"createdAt": "2024-05-20T11:30:00Z"
+	},
+	{
+		"id": "6",
+		"courseName": "인천 스카이힐 골프클럽",
+		"courseNameEn": "Incheon Sky Hill Golf Club",
+		"courseCode": "ISH006",
+		"address": {
+			"zipcode": "22689",
+			"address1": "인천광역시 서구 원창동 627-8",
+			"address2": ""
+		},
+		"contact": {
+			"phone": "032-560-3000",
+			"email": "skyhill@incheon-golf.co.kr"
+		},
+		"location": {
+			"latitude": 37.4045,
+			"longitude": 126.6754,
+			"coordinateSystem": "WGS84"
+		},
+		"operation": {
+			"totalHoles": 18,
+			"operatingHours": {
+				"summer": "06:00 - 18:30",
+				"winter": "07:30 - 17:00"
+			},
+			"closedDays": "연중무휴",
+			"cartPolicy": {
+				"fairwayAccess": true,
+				"rainPolicy": "그린 위 운행 금지",
+				"maxSpeed": 16
+			}
+		},
+		"environment": {
+			"terrain": ["hilly"],
+			"gpsShadedAreas": {
+				"count": 2,
+				"locations": "8번홀 언덕, 15번홀 그린"
+			},
+			"specialNotes": "공항 인근으로 소음이 있을 수 있음."
+		},
+		"totalCarts": 36,
+		"activeCarts": 24,
+		"status": "inactive",
+		"lastModified": "2025-01-10T14:30:00Z",
+		"createdAt": "2024-07-12T16:45:00Z"
 	}
 ]
