@@ -4,9 +4,37 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import auth, golf_courses, carts, maps, address, users
 
 app = FastAPI(
-    title="Golf Cart Management API Mock Server",
-    description="This is a mock API server for the Golf Cart Management Backoffice, based on the provided specification.",
+    title="골프카트 관리 백오피스 API",
+    description="""
+DY 골프카트 관리 백오피스 시스템의 REST API 명세서입니다.
+
+## 주요 기능
+- 사용자 인증 및 권한 관리
+- 골프장 정보 관리 (CRUD)
+- 골프카트 모니터링 및 관리
+- 맵 관리 및 파일 업로드
+- 실시간 카트 위치 추적
+
+## 인증
+모든 API 요청은 JWT Bearer 토큰이 필요합니다.
+
+## 실시간 데이터
+- 카트 위치 및 배터리 상태 실시간 모니터링
+- WebSocket 연결을 통한 실시간 알림
+    """,
     version="1.0.0",
+    contact={
+        "name": "DY Golf Cart API Support",
+        "email": "api-support@dygolfcart.com"
+    },
+    license_info={
+        "name": "Private"
+    },
+    servers=[
+        {"url": "http://localhost:8080/api", "description": "Development server"},
+        {"url": "https://staging-api.dygolfcart.com/api", "description": "Staging server"},
+        {"url": "https://api.dygolfcart.com/api", "description": "Production server"}
+    ]
 )
 
 # CORS 미들웨어 설정

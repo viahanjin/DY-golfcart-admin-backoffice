@@ -1,9 +1,8 @@
 import { writable, derived } from 'svelte/store';
-import type { MapData, MapCreateInput, MapUpdateInput } from '$lib/types/map';
-import mockMaps from '$lib/mock/maps.json';
+import { mapService, type Map, type MapCreateInput, type MapUpdateInput, type MapListParams } from '$lib/services/map.service';
 
 interface MapState {
-	items: MapData[];
+	items: Map[];
 	total: number;
 	page: number;
 	limit: number;
@@ -11,7 +10,8 @@ interface MapState {
 	loading: boolean;
 	error: { code: string; message: string } | null;
 	searchQuery: string;
-	selectedStatus: 'active' | 'testing' | 'inactive' | 'all';
+	selectedType: '2D' | '3D' | 'SATELLITE' | 'all';
+	selectedGolfCourseId: string | null;
 	sortBy: string;
 	sortOrder: 'asc' | 'desc';
 	selectedItems: Set<string>;
@@ -26,7 +26,8 @@ const initialState: MapState = {
 	loading: false,
 	error: null,
 	searchQuery: '',
-	selectedStatus: 'all',
+	selectedType: 'all',
+	selectedGolfCourseId: null,
 	sortBy: 'createdAt',
 	sortOrder: 'desc',
 	selectedItems: new Set()
@@ -35,152 +36,309 @@ const initialState: MapState = {
 function createMapStore() {
 	const { subscribe, set, update } = writable<MapState>(initialState);
 
-	async function loadMaps(params: any = {}) {
-		update(s => ({ ...s, loading: true }));
+	async function loadMaps(params: MapListParams = {}) {
+		update(s => ({ ...s, loading: true, error: null }));
 
-		const {
-			page = 1,
-			limit = 20,
-			search = '',
-			status = 'all',
-			sortBy = 'createdAt',
-			sortOrder = 'desc'
-		} = params;
+		try {
+			const response = await mapService.getList({
+				page: params.page || 1,
+				limit: params.limit || 20,
+				search: params.search || '',
+				type: params.type || undefined,
+				golfCourseId: params.golfCourseId,
+				sortBy: params.sortBy || 'createdAt',
+				sortOrder: params.sortOrder || 'desc'
+			});
 
-		let filtered: MapData[] = [...mockMaps] as MapData[];
-
-		if (status !== 'all') {
-			filtered = filtered.filter(m => m.mapStatus.status === status);
+			if (response.success && response.data) {
+				update(s => ({
+					...s,
+					items: response.data.items,
+					total: response.data.total,
+					page: response.data.page,
+					limit: response.data.limit,
+					totalPages: response.data.totalPages,
+					loading: false,
+					searchQuery: params.search || '',
+					selectedType: (params.type || 'all') as any,
+					selectedGolfCourseId: params.golfCourseId || null,
+					sortBy: params.sortBy || 'createdAt',
+					sortOrder: params.sortOrder || 'desc'
+				}));
+			} else {
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'UNKNOWN', message: '알 수 없는 오류가 발생했습니다.' }
+				}));
+			}
+		} catch (error) {
+			console.error('Failed to load maps:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
 		}
-
-		if (search) {
-			const lowerSearch = search.toLowerCase();
-			filtered = filtered.filter(m =>
-				m.mapId.toLowerCase().includes(lowerSearch) ||
-				m.mapName.toLowerCase().includes(lowerSearch)
-			);
-		}
-
-		filtered.sort((a, b) => {
-			const aVal = (a as any)[sortBy];
-			const bVal = (b as any)[sortBy];
-			if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-			if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-			return 0;
-		});
-
-		const total = filtered.length;
-		const totalPages = Math.ceil(total / limit);
-		const paginatedItems = filtered.slice((page - 1) * limit, page * limit);
-
-		update(s => ({
-			...s,
-			items: paginatedItems,
-			total,
-			page,
-			limit,
-			totalPages,
-			loading: false,
-			searchQuery: search,
-			selectedStatus: status,
-			sortBy,
-			sortOrder
-		}));
 	}
 
 	async function changePage(page: number) {
-		const currentState = get(mapStore);
-		await loadMaps({ ...currentState, page });
+		update(s => ({ ...s, page }));
+		await loadMaps({ page });
 	}
 
-	async function search(query: string) {
-		await loadMaps({ page: 1, search: query, status: get(mapStore).selectedStatus });
+	async function changeLimit(limit: number) {
+		update(s => ({ ...s, limit, page: 1 }));
+		await loadMaps({ limit, page: 1 });
 	}
 
-	async function changeFilter(status: any) {
-		await loadMaps({ page: 1, search: get(mapStore).searchQuery, status });
+	async function setSearchQuery(query: string) {
+		update(s => ({ ...s, searchQuery: query, page: 1 }));
+		await loadMaps({ search: query, page: 1 });
 	}
 
-	async function changeSort(sortBy: string) {
-		const currentState = get(mapStore);
-		const sortOrder = currentState.sortBy === sortBy && currentState.sortOrder === 'asc' ? 'desc' : 'asc';
-		await loadMaps({ ...currentState, sortBy, sortOrder });
+	async function setTypeFilter(type: MapState['selectedType']) {
+		update(s => ({ ...s, selectedType: type, page: 1 }));
+		const typeParam = type === 'all' ? undefined : type;
+		await loadMaps({ type: typeParam, page: 1 });
 	}
 
-	function toggleSelection(id: string) {
-		update(state => {
-			const newSelectedItems = new Set(state.selectedItems);
-			if (newSelectedItems.has(id)) {
-				newSelectedItems.delete(id);
+	async function setGolfCourseFilter(golfCourseId: string | null) {
+		update(s => ({ ...s, selectedGolfCourseId: golfCourseId, page: 1 }));
+		await loadMaps({ golfCourseId, page: 1 });
+	}
+
+	async function setSorting(sortBy: string, sortOrder: 'asc' | 'desc') {
+		update(s => ({ ...s, sortBy, sortOrder, page: 1 }));
+		await loadMaps({ sortBy, sortOrder, page: 1 });
+	}
+
+	function selectItem(id: string) {
+		update(s => ({
+			...s,
+			selectedItems: new Set(s.selectedItems).add(id)
+		}));
+	}
+
+	function deselectItem(id: string) {
+		update(s => {
+			const newSet = new Set(s.selectedItems);
+			newSet.delete(id);
+			return { ...s, selectedItems: newSet };
+		});
+	}
+
+	function selectAll() {
+		update(s => ({
+			...s,
+			selectedItems: new Set(s.items.map(item => item.id))
+		}));
+	}
+
+	function deselectAll() {
+		update(s => ({
+			...s,
+			selectedItems: new Set()
+		}));
+	}
+
+	async function createMap(data: MapCreateInput) {
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const response = await mapService.create(data);
+			
+			if (response.success) {
+				await loadMaps(); // 목록 새로고침
+				return response;
 			} else {
-				newSelectedItems.add(id);
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'CREATE_ERROR', message: '맵 생성에 실패했습니다.' }
+				}));
+				return response;
 			}
-			return { ...state, selectedItems: newSelectedItems };
-		});
+		} catch (error) {
+			console.error('Failed to create map:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
+			return { success: false, error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' } };
+		}
 	}
 
-	function toggleSelectAll() {
-		update(state => {
-			const allIds = state.items.map(item => item.mapId);
-			const newSelectedItems = state.selectedItems.size === allIds.length
-				? new Set<string>()
-				: new Set(allIds);
-			return { ...state, selectedItems: newSelectedItems };
-		});
+	async function updateMap(id: string, data: MapUpdateInput) {
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const response = await mapService.update(id, data);
+			
+			if (response.success) {
+				await loadMaps(); // 목록 새로고침
+				return response;
+			} else {
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'UPDATE_ERROR', message: '맵 수정에 실패했습니다.' }
+				}));
+				return response;
+			}
+		} catch (error) {
+			console.error('Failed to update map:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
+			return { success: false, error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' } };
+		}
+	}
+
+	async function deleteMap(id: string) {
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const response = await mapService.delete(id);
+			
+			if (response.success) {
+				await loadMaps(); // 목록 새로고침
+				return response;
+			} else {
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'DELETE_ERROR', message: '맵 삭제에 실패했습니다.' }
+				}));
+				return response;
+			}
+		} catch (error) {
+			console.error('Failed to delete map:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
+			return { success: false, error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' } };
+		}
+	}
+
+	async function deleteSelectedMaps() {
+		const state = get(mapStore);
+		const selectedIds = Array.from(state.selectedItems);
+		
+		if (selectedIds.length === 0) return;
+
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const deletePromises = selectedIds.map(id => mapService.delete(id));
+			await Promise.all(deletePromises);
+			
+			await loadMaps(); // 목록 새로고침
+			deselectAll(); // 선택 해제
+		} catch (error) {
+			console.error('Failed to delete selected maps:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'BULK_DELETE_ERROR', message: '일괄 삭제에 실패했습니다.' }
+			}));
+		}
+	}
+
+	async function uploadImage(file: File, mapId?: string) {
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const response = await mapService.uploadImageFile(file, mapId);
+			
+			if (response.success) {
+				update(s => ({ ...s, loading: false }));
+				return response;
+			} else {
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'UPLOAD_ERROR', message: '이미지 업로드에 실패했습니다.' }
+				}));
+				return response;
+			}
+		} catch (error) {
+			console.error('Failed to upload image:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
+			return { success: false, error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' } };
+		}
+	}
+
+	async function uploadMetadata(files: File[], mapId?: string) {
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const response = await mapService.uploadMetadataFolder(files, mapId);
+			
+			if (response.success) {
+				update(s => ({ ...s, loading: false }));
+				return response;
+			} else {
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'UPLOAD_ERROR', message: '메타데이터 업로드에 실패했습니다.' }
+				}));
+				return response;
+			}
+		} catch (error) {
+			console.error('Failed to upload metadata:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
+			return { success: false, error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' } };
+		}
 	}
 
 	function clearError() {
 		update(s => ({ ...s, error: null }));
 	}
 
-	// Mock CRUD operations
-	async function createMap(data: MapCreateInput) {
-		console.log("Creating map", data);
-		await loadMaps();
-		return true;
-	}
-	async function updateMap(id: string, data: MapUpdateInput) {
-		console.log("Updating map", id, data);
-		await loadMaps();
-		return true;
-	}
-	async function deleteMap(id: string) {
-		console.log("Deleting map", id);
-		await loadMaps();
-		return true;
-	}
-	async function bulkDelete() {
-		console.log("Bulk deleting maps", get(mapStore).selectedItems);
-		update(s => ({...s, selectedItems: new Set()}));
-		await loadMaps();
-		return true;
-	}
-
 	return {
 		subscribe,
 		loadMaps,
 		changePage,
-		search,
-		changeFilter,
-		changeSort,
-		toggleSelection,
-		toggleSelectAll,
-		clearError,
+		changeLimit,
+		setSearchQuery,
+		setTypeFilter,
+		setGolfCourseFilter,
+		setSorting,
+		selectItem,
+		deselectItem,
+		selectAll,
+		deselectAll,
 		createMap,
 		updateMap,
 		deleteMap,
-		bulkDelete,
+		deleteSelectedMaps,
+		uploadImage,
+		uploadMetadata,
+		clearError
 	};
 }
 
 export const mapStore = createMapStore();
 
-function get<T>(store: { subscribe: (fn: (value: T) => void) => () => void }): T {
-	let value: T;
-	store.subscribe((v) => (value = v))();
-	return value!;
-}
+// Derived stores
+export const isLoading = derived(mapStore, $state => $state.loading);
+export const errorMessage = derived(mapStore, $state => $state.error?.message || null);
+export const selectedCount = derived(mapStore, $state => $state.selectedItems.size);
 
-export const isLoading = derived(mapStore, $s => $s.loading);
-export const errorMessage = derived(mapStore, $s => $s.error?.message || null);
-export const selectedCount = derived(mapStore, $s => $s.selectedItems.size);
+// Store 액세스를 위한 get 함수
+import { get } from 'svelte/store';

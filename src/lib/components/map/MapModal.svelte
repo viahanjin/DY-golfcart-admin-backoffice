@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { Upload, File } from 'lucide-svelte';
-	import { mapService } from '$lib/services/mapService';
+	import { mapService } from '$lib/services/map.service';
 	import BaseModal from '$lib/components/common/BaseModal.svelte';
 
 	export let modalMode: 'create' | 'edit' | 'view';

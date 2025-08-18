@@ -119,8 +119,6 @@
 												<Square class="h-4 w-4 text-gray-400" />
 											{/if}
 										</button>
-									{:else if $$slots[`cell-${String(column.key)}`]}
-										<slot name="cell-{String(column.key)}" {item} />
 									{:else}
 										<span class="text-gray-900 dark:text-gray-200">
 											{get(item, String(column.key))}
