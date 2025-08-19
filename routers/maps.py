@@ -50,6 +50,84 @@ async def get_maps(page: int = 1, limit: int = 20, golfCourseId: Optional[str] =
             "resolution": "4096x4096",
             "createdAt": "2024-01-10T09:00:00Z",
             "updatedAt": "2024-01-12T10:00:00Z"
+          },
+          {
+            "id": "MAP-002",
+            "name": "오션뷰 코스 맵",
+            "description": "오션뷰 골프클럽 해안 코스 맵",
+            "golfCourseId": "GC-002",
+            "golfCourseName": "오션뷰 골프클럽",
+            "type": "2D",
+            "version": "1.0.0",
+            "imageUrl": "/uploads/maps/images/oceanview-course.jpg",
+            "thumbnailUrl": "/uploads/maps/thumbnails/oceanview-course-thumb.jpg",
+            "metadataUrl": "/uploads/maps/metadata/oceanview",
+            "bounds": {
+              "north": 35.1896,
+              "south": 35.1696,
+              "east": 129.0856,
+              "west": 129.0656
+            },
+            "layers": [
+              {
+                "name": "fairway",
+                "visible": True,
+                "type": "polygon"
+              },
+              {
+                "name": "water",
+                "visible": True,
+                "type": "polygon"
+              },
+              {
+                "name": "sand",
+                "visible": True,
+                "type": "polygon"
+              }
+            ],
+            "fileSize": 8456320,
+            "resolution": "2048x2048",
+            "createdAt": "2024-01-08T09:00:00Z",
+            "updatedAt": "2024-01-08T09:00:00Z"
+          },
+          {
+            "id": "MAP-003",
+            "name": "마운틴 골프클럽 위성 맵",
+            "description": "마운틴 골프클럽 산악 코스 위성 이미지",
+            "golfCourseId": "GC-003",
+            "golfCourseName": "마운틴 골프클럽",
+            "type": "SATELLITE",
+            "version": "2.1.0",
+            "imageUrl": "/uploads/maps/images/mountain-satellite.jpg",
+            "thumbnailUrl": "/uploads/maps/thumbnails/mountain-satellite-thumb.jpg",
+            "metadataUrl": "/uploads/maps/metadata/mountain",
+            "bounds": {
+              "north": 37.8412,
+              "south": 37.8212,
+              "east": 127.5147,
+              "west": 127.4947
+            },
+            "layers": [
+              {
+                "name": "terrain",
+                "visible": True,
+                "type": "raster"
+              },
+              {
+                "name": "trees",
+                "visible": True,
+                "type": "polygon"
+              },
+              {
+                "name": "paths",
+                "visible": True,
+                "type": "line"
+              }
+            ],
+            "fileSize": 25165824,
+            "resolution": "8192x8192",
+            "createdAt": "2024-01-05T09:00:00Z",
+            "updatedAt": "2024-01-11T14:00:00Z"
           }
         ],
         "pagination": {

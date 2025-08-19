@@ -2,8 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { mapStore, isLoading, errorMessage, selectedCount } from '$lib/stores/map.store';
 	import type { MapData } from '$lib/types/map';
-	import type { StatItem } from '$lib/components/common/StatsCards.svelte';
-	import type { ColumnDefinition } from '$lib/components/common/DataTable.svelte';
+	import type { StatItem, ColumnDefinition } from '$lib/types/common';
 
 	// Component Imports
 	import StatsCards from '$lib/components/common/StatsCards.svelte';
@@ -13,7 +12,7 @@
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 
 	// Icon Imports
-	import { Map, Activity, CheckCircle, Eye, Edit, Trash2, AlertCircle, X, Clock, XCircle } from 'lucide-svelte';
+	import { Map, Activity, CheckCircle, Eye, Edit, Trash2, AlertCircle, X, Clock } from 'lucide-svelte';
 
 	// --- Store and State ---
 	let storeState: any;
@@ -53,18 +52,18 @@
 	// --- Component Props ---
 	$: stats = storeState ? ([
 		{ label: '전체 맵', value: storeState.total, icon: Map, color: 'text-blue-500' },
-		{ label: '활성 맵', value: storeState.items.filter((m: MapData) => m.mapStatus.status === 'active').length, icon: Activity, color: 'text-green-500' },
-		{ label: '테스트 중', value: storeState.items.filter((m: MapData) => m.mapStatus.status === 'testing').length, icon: Clock, color: 'text-yellow-500' },
-		{ label: '검증 완료', value: storeState.items.filter((m: MapData) => m.mapStatus.validationStatus === 'verified').length, icon: CheckCircle, color: 'text-purple-500' }
+		{ label: '3D 맵', value: storeState.items.filter((m: MapData) => m.type === '3D').length, icon: Activity, color: 'text-green-500' },
+		{ label: '2D 맵', value: storeState.items.filter((m: MapData) => m.type === '2D').length, icon: Clock, color: 'text-yellow-500' },
+		{ label: '위성 맵', value: storeState.items.filter((m: MapData) => m.type === 'SATELLITE').length, icon: CheckCircle, color: 'text-purple-500' }
 	] as StatItem[]) : [];
 
 	const columns: ColumnDefinition<MapData>[] = [
 		{ key: 'select', label: 'Select', class: 'w-12' },
-		{ key: 'mapName', label: '맵 정보', sortable: true },
+		{ key: 'name', label: '맵 정보', sortable: true },
 		{ key: 'version', label: '버전', sortable: true, class: 'text-center' },
-		{ key: 'connectedGolfCourseId', label: '연결 골프장' },
-		{ key: 'mapStatus.status', label: '상태', sortable: true, class: 'text-center' },
-		{ key: 'mapStatus.validationStatus', label: '검증', class: 'text-center' },
+		{ key: 'golfCourseName', label: '연결 골프장' },
+		{ key: 'type', label: '타입', sortable: true, class: 'text-center' },
+		{ key: 'resolution', label: '해상도', class: 'text-center' },
 		{ key: 'updatedAt', label: '최근 수정', sortable: true },
 		{ key: 'actions', label: '액션', class: 'w-24 text-center' }
 	];
@@ -97,9 +96,11 @@
 		const { mode, data } = event.detail;
 		let success = false;
 		if (mode === 'create') {
-			success = await mapStore.createMap(data);
+			const response = await mapStore.createMap(data);
+			success = response.success;
 		} else if (mode === 'edit' && selectedMap) {
-			success = await mapStore.updateMap(selectedMap.mapId, data);
+			const response = await mapStore.updateMap(selectedMap.id, data);
+			success = response.success;
 		}
 		if (success) {
 			showModal = false;
@@ -108,7 +109,7 @@
 
 	async function confirmDelete() {
 		if (mapToDelete) {
-			await mapStore.deleteMap(mapToDelete.mapId);
+			await mapStore.deleteMap(mapToDelete.id);
 		}
 		mapToDelete = null;
 		showDeleteDialog = false;
@@ -119,37 +120,6 @@
 		showBulkDeleteDialog = false;
 	}
 
-	// --- Helper Functions ---
-	function getStatusInfo(status: 'active' | 'testing' | 'inactive') {
-		switch (status) {
-			case 'active': return { color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/50', text: '활성' };
-			case 'testing': return { color: 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/50', text: '테스트 중' };
-			case 'inactive': return { color: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700', text: '비활성' };
-		}
-	}
-
-	function getValidationIcon(status: 'verified' | 'pending' | 'failed') {
-		switch (status) {
-			case 'verified': return CheckCircle;
-			case 'pending': return Clock;
-			case 'failed': return XCircle;
-		}
-	}
-
-	function getValidationClass(status: 'verified' | 'pending' | 'failed') {
-		const baseClass = 'h-5 w-5';
-		switch (status) {
-			case 'verified': return `${baseClass} text-green-500`;
-			case 'pending': return `${baseClass} text-yellow-500`;
-			case 'failed': return `${baseClass} text-red-500`;
-			default: return baseClass;
-		}
-	}
-
-	function formatDate(dateString: string) {
-		if (!dateString) return '';
-		return new Date(dateString).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
-	}
 </script>
 
 {#if storeState}
@@ -192,13 +162,13 @@
 		<svelte:fragment slot="filters">
 			<select
 				value={storeState.selectedStatus}
-				on:change={(e) => mapStore.changeFilter(e.currentTarget.value)}
+				on:change={(e) => mapStore.changeFilter(e.currentTarget.value as any)}
 				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			>
-				<option value="all">전체 상태</option>
-				<option value="active">활성</option>
-				<option value="testing">테스트 중</option>
-				<option value="inactive">비활성</option>
+				<option value="all">전체 타입</option>
+				<option value="3D">3D 맵</option>
+				<option value="2D">2D 맵</option>
+				<option value="SATELLITE">위성 맵</option>
 			</select>
 		</svelte:fragment>
 	</FilterBar>
@@ -207,7 +177,7 @@
 	<DataTable
 		items={storeState.items}
 		columns={columns}
-		idKey="mapId"
+		idKey="id"
 		loading={loading}
 		selectedItems={storeState.selectedItems}
 		sortBy={storeState.sortBy}
@@ -215,8 +185,11 @@
 		page={storeState.page}
 		totalPages={storeState.totalPages}
 		totalItems={storeState.total}
-		on:sort={(e) => mapStore.changeSort(e.detail)}
-		on:select={(e) => mapStore.toggleSelection(e.detail)}
+		on:sort={(e) => {
+			const newOrder = storeState.sortBy === e.detail && storeState.sortOrder === 'asc' ? 'desc' : 'asc';
+			mapStore.changeSort({ sortBy: e.detail, sortOrder: newOrder } as any);
+		}}
+		on:select={(e) => mapStore.toggleSelection(String(e.detail))}
 		on:selectAll={mapStore.toggleSelectAll}
 		on:pageChange={(e) => mapStore.changePage(e.detail)}
 	>
@@ -226,34 +199,6 @@
 			<p class="mt-1 text-sm">새로운 맵을 추가해주세요.</p>
 		</div>
 
-		<svelte:fragment slot="cell-mapName" let:item>
-			<div>
-				<p class="font-medium text-gray-900 dark:text-white">{item.mapName}</p>
-				<p class="text-sm text-gray-500 dark:text-gray-400">{item.mapId}</p>
-			</div>
-		</svelte:fragment>
-
-		<svelte:fragment slot="cell-version" let:item>
-			v{item.version}
-		</svelte:fragment>
-
-		<svelte:fragment slot="cell-mapStatus.status" let:item>
-			{@const status = getStatusInfo(item.mapStatus.status)}
-			<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
-				{status.text}
-			</span>
-		</svelte:fragment>
-
-		<svelte:fragment slot="cell-mapStatus.validationStatus" let:item>
-			<svelte:component
-				this={getValidationIcon(item.mapStatus.validationStatus)}
-				class={getValidationClass(item.mapStatus.validationStatus)}
-			/>
-		</svelte:fragment>
-
-		<svelte:fragment slot="cell-updatedAt" let:item>
-			{formatDate(item.updatedAt)}
-		</svelte:fragment>
 
 		<svelte:fragment slot="cell-actions" let:item>
 			<div class="flex items-center justify-center gap-1">
@@ -285,7 +230,7 @@
 {#if showDeleteDialog}
 	<ConfirmDialog
 		title="맵 삭제"
-		message={`'${mapToDelete?.mapName}' (v${mapToDelete?.version}) 맵을 정말 삭제하시겠습니까?`}
+		message={`'${mapToDelete?.name}' (v${mapToDelete?.version}) 맵을 정말 삭제하시겠습니까?`}
 		confirmText="삭제"
 		danger={true}
 		on:confirm={confirmDelete}

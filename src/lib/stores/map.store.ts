@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import { mapService, type Map, type MapCreateInput, type MapUpdateInput, type MapListParams } from '$lib/services/map.service';
 
 interface MapState {
@@ -315,18 +315,34 @@ function createMapStore() {
 		loadMaps,
 		changePage,
 		changeLimit,
-		setSearchQuery,
-		setTypeFilter,
+		search: setSearchQuery,
+		changeFilter: setTypeFilter,
 		setGolfCourseFilter,
-		setSorting,
+		changeSort: (params: { sortBy: string; sortOrder: 'asc' | 'desc' }) => setSorting(params.sortBy, params.sortOrder),
 		selectItem,
 		deselectItem,
+		toggleSelection: (id: string) => {
+			const state = get(mapStore);
+			if (state.selectedItems.has(id)) {
+				deselectItem(id);
+			} else {
+				selectItem(id);
+			}
+		},
 		selectAll,
 		deselectAll,
+		toggleSelectAll: () => {
+			const state = get(mapStore);
+			if (state.selectedItems.size === state.items.length) {
+				deselectAll();
+			} else {
+				selectAll();
+			}
+		},
 		createMap,
 		updateMap,
 		deleteMap,
-		deleteSelectedMaps,
+		bulkDelete: deleteSelectedMaps,
 		uploadImage,
 		uploadMetadata,
 		clearError
@@ -340,5 +356,3 @@ export const isLoading = derived(mapStore, $state => $state.loading);
 export const errorMessage = derived(mapStore, $state => $state.error?.message || null);
 export const selectedCount = derived(mapStore, $state => $state.selectedItems.size);
 
-// Store 액세스를 위한 get 함수
-import { get } from 'svelte/store';

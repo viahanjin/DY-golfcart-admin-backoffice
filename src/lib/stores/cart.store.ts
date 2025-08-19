@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import { cartService, type Cart, type CartCreateInput, type CartUpdateInput, type CartListParams } from '$lib/services/cart.service';
 
 interface CartState {
@@ -252,17 +252,33 @@ function createCartStore() {
 		loadCarts,
 		changePage,
 		changeLimit,
-		setSearchQuery,
-		setStatusFilter,
-		setSorting,
+		search: setSearchQuery,
+		changeFilter: setStatusFilter,
+		changeSort: (params: { sortBy: string; sortOrder: 'asc' | 'desc' }) => setSorting(params.sortBy, params.sortOrder),
 		selectItem,
 		deselectItem,
+		toggleSelection: (id: string) => {
+			const state = get(cartStore);
+			if (state.selectedItems.has(id)) {
+				deselectItem(id);
+			} else {
+				selectItem(id);
+			}
+		},
 		selectAll,
 		deselectAll,
+		toggleSelectAll: () => {
+			const state = get(cartStore);
+			if (state.selectedItems.size === state.items.length) {
+				deselectAll();
+			} else {
+				selectAll();
+			}
+		},
 		createCart,
 		updateCart,
 		deleteCart,
-		deleteSelectedCarts,
+		bulkDelete: deleteSelectedCarts,
 		clearError
 	};
 }
@@ -274,5 +290,3 @@ export const isLoading = derived(cartStore, $state => $state.loading);
 export const errorMessage = derived(cartStore, $state => $state.error?.message || null);
 export const selectedCount = derived(cartStore, $state => $state.selectedItems.size);
 
-// Store 액세스를 위한 get 함수
-import { get } from 'svelte/store';

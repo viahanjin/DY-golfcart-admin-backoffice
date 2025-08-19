@@ -39,13 +39,97 @@ async def get_carts(page: int = 1, limit: int = 20, golfCourseId: Optional[str] 
             },
             "createdAt": "2024-01-01T09:00:00Z",
             "updatedAt": "2024-01-15T14:30:00Z"
+          },
+          {
+            "id": "CART-002",
+            "cartNumber": "A-002",
+            "modelName": "Club Car Precedent",
+            "manufacturer": "Club Car",
+            "golfCourseId": "GC-001",
+            "golfCourseName": "그린필드 골프클럽",
+            "status": "IN_USE",
+            "batteryLevel": 62,
+            "batteryStatus": "NORMAL",
+            "isCharging": False,
+            "lastMaintenance": "2024-01-08",
+            "nextMaintenance": "2024-02-08",
+            "currentLocation": {
+              "latitude": 37.5075,
+              "longitude": 127.0545,
+              "course": "챔피언십 코스",
+              "hole": 3
+            },
+            "usageStats": {
+              "totalDistance": 12850.3,
+              "totalHours": 285.2,
+              "todayDistance": 28.1,
+              "todayHours": 2.8
+            },
+            "createdAt": "2024-01-02T09:00:00Z",
+            "updatedAt": "2024-01-15T13:45:00Z"
+          },
+          {
+            "id": "CART-003",
+            "cartNumber": "B-001",
+            "modelName": "Yamaha Drive2",
+            "manufacturer": "Yamaha",
+            "golfCourseId": "GC-002",
+            "golfCourseName": "오션뷰 골프클럽",
+            "status": "CHARGING",
+            "batteryLevel": 15,
+            "batteryStatus": "LOW",
+            "isCharging": True,
+            "lastMaintenance": "2024-01-12",
+            "nextMaintenance": "2024-02-12",
+            "currentLocation": {
+              "latitude": 35.1796,
+              "longitude": 129.0756,
+              "course": "오션 코스",
+              "hole": 1
+            },
+            "usageStats": {
+              "totalDistance": 8920.7,
+              "totalHours": 198.5,
+              "todayDistance": 52.3,
+              "todayHours": 5.2
+            },
+            "createdAt": "2024-01-03T09:00:00Z",
+            "updatedAt": "2024-01-15T16:20:00Z"
+          },
+          {
+            "id": "CART-004",
+            "cartNumber": "C-001",
+            "modelName": "EZ-GO TXT",
+            "manufacturer": "E-Z-GO",
+            "golfCourseId": "GC-003",
+            "golfCourseName": "마운틴 골프클럽",
+            "status": "MAINTENANCE",
+            "batteryLevel": 0,
+            "batteryStatus": "CRITICAL",
+            "isCharging": False,
+            "lastMaintenance": "2024-01-14",
+            "nextMaintenance": "2024-02-14",
+            "currentLocation": {
+              "latitude": 37.8312,
+              "longitude": 127.5047,
+              "course": "마운틴 코스",
+              "hole": 1
+            },
+            "usageStats": {
+              "totalDistance": 18750.9,
+              "totalHours": 412.8,
+              "todayDistance": 0,
+              "todayHours": 0
+            },
+            "createdAt": "2024-01-04T09:00:00Z",
+            "updatedAt": "2024-01-15T08:30:00Z"
           }
         ],
         "pagination": {
           "page": page,
           "limit": limit,
           "total": 150,
-          "totalPages": (150 // limit) + 1
+          "totalPages": 8
         }
       }
     }

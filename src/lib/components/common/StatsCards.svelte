@@ -1,13 +1,6 @@
 <script lang="ts">
-	import type { ComponentType } from 'svelte';
-
-	export type StatItem = {
-		label: string;
-		value: number | string;
-		icon: ComponentType;
-		color?: string;
-	};
-
+	import type { StatItem } from '$lib/types/common';
+	
 	export let stats: StatItem[] = [];
 </script>
 

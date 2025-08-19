@@ -1,23 +1,30 @@
 export interface Cart {
 	id: string;
-	cartName: string;
-	modelYear: string;
+	cartNumber: string;
+	modelName: string;
 	manufacturer: string;
-	assignedGolfCourseId: string;
-	hardware: { mcu: boolean; vcu: boolean; vpu: boolean; acu: boolean };
-	sensors: string[];
-	capabilities: {
-		supportedModes: string[];
-		maxSpeed: number;
-		battery: { type: string; capacity: string; expectedHours: number };
+	golfCourseId: string;
+	golfCourseName: string;
+	status: 'AVAILABLE' | 'IN_USE' | 'CHARGING' | 'MAINTENANCE';
+	batteryLevel: number;
+	batteryStatus: string;
+	isCharging: boolean;
+	lastMaintenance: string;
+	nextMaintenance: string;
+	currentLocation: {
+		latitude: number;
+		longitude: number;
+		course: string;
+		hole: number;
 	};
-	network: { macAddress: string; ip: string; isStatic: boolean };
-	mqtt: { clientId: string; qos: number };
-	cartStatus: {
-		currentState: 'available' | 'maintenance' | 'broken' | 'unavailable';
-		lastInspection: string;
-		nextInspection: string;
+	usageStats: {
+		totalDistance: number;
+		totalHours: number;
+		todayDistance: number;
+		todayHours: number;
 	};
+	createdAt: string;
+	updatedAt: string;
 }
 
 export type CartCreateInput = Omit<Cart, 'id'>;

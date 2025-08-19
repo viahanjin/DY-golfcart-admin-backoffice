@@ -1,15 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Loader2, CheckSquare, Square } from 'lucide-svelte';
-	import type { SvelteComponent, ComponentType } from 'svelte';
-
-	// --- TYPES ---
-	export type ColumnDefinition<T extends Record<string, any>> = {
-		key: (keyof T & string) | 'select' | 'actions';
-		label: string;
-		sortable?: boolean;
-		class?: string; // e.g. 'w-24 text-center'
-	};
+	import type { ColumnDefinition } from '$lib/types/common';
 
 	// --- PROPS ---
 	export let items: any[] = [];
@@ -40,6 +32,14 @@
 	$: allSelected = items.length > 0 && selectedItems.size === items.filter(it => it[idKey]).length;
 	$: fromItem = (page - 1) * itemsPerPage + 1;
 	$: toItem = Math.min(page * itemsPerPage, totalItems);
+
+	// Declare slots interface
+	interface $$Slots {
+		'empty-state': {};
+		'cell-status': { item: any };
+		'cell-actions': { item: any };
+		[key: `cell-${string}`]: { item: any };
+	}
 
 	// --- HELPERS ---
 	// Safely access nested properties like 'address.city'
@@ -119,6 +119,18 @@
 												<Square class="h-4 w-4 text-gray-400" />
 											{/if}
 										</button>
+									{:else if column.key === 'status'}
+										<slot name="cell-status" {item}>
+											<span class="text-gray-900 dark:text-gray-200">
+												{get(item, String(column.key))}
+											</span>
+										</slot>
+									{:else if column.key === 'actions'}
+										<slot name="cell-actions" {item}>
+											<span class="text-gray-900 dark:text-gray-200">
+												{get(item, String(column.key))}
+											</span>
+										</slot>
 									{:else}
 										<span class="text-gray-900 dark:text-gray-200">
 											{get(item, String(column.key))}
