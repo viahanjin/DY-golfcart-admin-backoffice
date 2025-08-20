@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from routers import auth, golf_courses, carts, maps, address, users
 
@@ -45,6 +47,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 정적 파일 제공 설정 (업로드된 파일들을 제공)
+uploads_path = Path("uploads")
+if uploads_path.exists():
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # 라우터 포함
 app.include_router(auth.router, prefix="/api")

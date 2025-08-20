@@ -30,7 +30,7 @@
 		<a href="/dashboard" class="flex items-center gap-2">
 			<img src="/favicon.svg" alt="Logo" class="h-8 w-8" />
 			{#if isOpen}
-				<span class="text-lg font-semibold dark:text-white">AF Operator</span>
+				<span class="text-lg font-semibold text-gray-900 dark:text-white">AF Operator</span>
 			{/if}
 		</a>
 	</div>
@@ -44,11 +44,11 @@
 			{#if item.children}
 				<!-- 하위 메뉴가 있는 경우 -->
 				<div>
-					<button on:click={() => toggleMenu(item.id)} class="group flex w-full items-center justify-between rounded-lg px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700">
+					<button on:click={() => toggleMenu(item.id)} class="group flex w-full items-center justify-between rounded-lg px-4 py-2 text-left text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
 						<div class="flex items-center gap-3">
-							<svelte:component this={item.icon} class="h-5 w-5 {isParentActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}" />
+							<svelte:component this={item.icon} class="h-5 w-5 {isParentActive ? 'text-blue-500' : 'text-gray-600 dark:text-gray-400'}" />
 							{#if isOpen}
-								<span class="font-medium {isParentActive ? 'text-blue-600 dark:text-blue-300' : 'text-gray-700 dark:text-gray-200'}">{item.label}</span>
+								<span class="font-medium {isParentActive ? 'text-blue-600 dark:text-blue-300' : 'text-gray-800 dark:text-gray-200'}">{item.label}</span>
 							{/if}
 						</div>
 						{#if isOpen}
@@ -60,7 +60,7 @@
 							{#each item.children as child (child.id)}
 								{@const isChildActive = child.path === $page.url.pathname}
 								<li>
-									<a href={child.path} class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 {isChildActive ? 'font-semibold text-blue-600 dark:text-blue-300' : 'text-gray-600 dark:text-gray-300'}">
+									<a href={child.path} class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 {isChildActive ? 'font-semibold text-blue-600 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}">
 										<svelte:component this={child.icon} class="h-4 w-4" />
 										{child.label}
 									</a>
@@ -71,8 +71,8 @@
 				</div>
 			{:else}
 				<!-- 하위 메뉴가 없는 경우 -->
-				<a href={item.path} class="group flex items-center gap-3 rounded-lg px-4 py-2 {isActive ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'}">
-					<svelte:component this={item.icon} class="h-5 w-5 {isActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}" />
+				<a href={item.path} class="group flex items-center gap-3 rounded-lg px-4 py-2 {isActive ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'}">
+					<svelte:component this={item.icon} class="h-5 w-5 {isActive ? 'text-blue-500' : 'text-gray-600 dark:text-gray-400'}" />
 					{#if isOpen}
 						<span class="font-medium">{item.label}</span>
 					{/if}

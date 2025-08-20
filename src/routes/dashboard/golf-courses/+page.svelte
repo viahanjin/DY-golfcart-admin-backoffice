@@ -34,6 +34,11 @@
 	let showModal = false;
 	let modalMode: 'create' | 'edit' | 'view' = 'create';
 	let selectedCourse: GolfCourse | null = null;
+	
+	// 디버깅: showModal 상태 변화 감지
+	$: {
+		console.log('showModal changed:', showModal, 'modalMode:', modalMode);
+	}
 	let courseToDelete: GolfCourse | null = null;
 	let showDeleteDialog = false;
 	let showBulkDeleteDialog = false;
@@ -228,13 +233,13 @@
 
 		<svelte:fragment slot="cell-actions" let:item>
 			<div class="flex items-center justify-center gap-1">
-				<button on:click={() => handleView(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700" title="상세보기">
+				<button on:click={() => handleView(item)} class="rounded-lg p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20" title="상세보기">
 					<Eye class="h-4 w-4" />
 				</button>
-				<button on:click={() => handleEdit(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700" title="수정">
+				<button on:click={() => handleEdit(item)} class="rounded-lg p-2 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20" title="수정">
 					<Edit class="h-4 w-4" />
 				</button>
-				<button on:click={() => handleDelete(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700" title="삭제">
+				<button on:click={() => handleDelete(item)} class="rounded-lg p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" title="삭제">
 					<Trash2 class="h-4 w-4" />
 				</button>
 			</div>
