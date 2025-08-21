@@ -1,13 +1,16 @@
-<script lang="ts">
+<script context="module" lang="ts">
 	import type { ComponentType } from 'svelte';
-
+	
+	// Type exports must be in module context
 	export type StatItem = {
 		label: string;
 		value: number | string;
 		icon: ComponentType;
 		color?: string;
 	};
+</script>
 
+<script lang="ts">
 	export let stats: StatItem[] = [];
 </script>
 

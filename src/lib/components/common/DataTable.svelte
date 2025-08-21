@@ -1,15 +1,16 @@
-<script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import { Loader2, CheckSquare, Square } from 'lucide-svelte';
-	import type { SvelteComponent, ComponentType } from 'svelte';
-
-	// --- TYPES ---
+<script context="module" lang="ts">
+	// Type exports must be in module context
 	export type ColumnDefinition<T extends Record<string, any>> = {
 		key: (keyof T & string) | 'select' | 'actions';
 		label: string;
 		sortable?: boolean;
 		class?: string; // e.g. 'w-24 text-center'
 	};
+</script>
+
+<script lang="ts">
+	import { createEventDispatcher } from 'svelte';
+	import { Loader2, CheckSquare, Square } from 'lucide-svelte';
 
 	// --- PROPS ---
 	export let items: any[] = [];
@@ -119,8 +120,24 @@
 												<Square class="h-4 w-4 text-gray-400" />
 											{/if}
 										</button>
-									{:else if $$slots[`cell-${String(column.key)}`]}
-										<slot name="cell-{String(column.key)}" {item} />
+									{:else if column.key === 'actions' && $$slots['cell-actions']}
+										<slot name="cell-actions" {item} />
+									{:else if column.key === 'status' && $$slots['cell-status']}
+										<slot name="cell-status" {item} />
+									{:else if column.key === 'cartStatus.currentState' && $$slots['cell-cartStatus.currentState']}
+										<slot name="cell-cartStatus.currentState" {item} />
+									{:else if column.key === 'mapStatus.status' && $$slots['cell-mapStatus.status']}
+										<slot name="cell-mapStatus.status" {item} />
+									{:else if column.key === 'mapStatus.validationStatus' && $$slots['cell-mapStatus.validationStatus']}
+										<slot name="cell-mapStatus.validationStatus" {item} />
+									{:else if column.key === 'lastModified' && $$slots['cell-lastModified']}
+										<slot name="cell-lastModified" {item} />
+									{:else if column.key === 'updatedAt' && $$slots['cell-updatedAt']}
+										<slot name="cell-updatedAt" {item} />
+									{:else if column.key === 'mapName' && $$slots['cell-mapName']}
+										<slot name="cell-mapName" {item} />
+									{:else if column.key === 'version' && $$slots['cell-version']}
+										<slot name="cell-version" {item} />
 									{:else}
 										<span class="text-gray-900 dark:text-gray-200">
 											{get(item, String(column.key))}

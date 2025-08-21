@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { Upload, File } from 'lucide-svelte';
+	import { Upload, FileIcon } from 'lucide-svelte';
 	import { mapService } from '$lib/services/mapService';
 	import BaseModal from '$lib/components/common/BaseModal.svelte';
 
@@ -99,7 +99,7 @@
 		
 		input.onchange = (e) => {
 			const target = e.target as HTMLInputElement;
-			const files = Array.from(target.files || []) as File[];
+			const files = Array.from(target.files || []);
 			if (files.length > 0) {
 				// 선택된 폴더의 상위 폴더 경로 추출
 				const firstFile = files[0];
@@ -126,7 +126,7 @@
 				formData.mapFiles.metadataFile = folderPath;
 				
 				// 실제 폴더 업로드 API 호출
-				mapService.uploadMetadataFolder(files, formData.mapId)
+				mapService.uploadMetadataFolder(files as File[], formData.mapId)
 					.then(result => {
 						console.log('메타데이터 폴더 업로드 성공:', result);
 						if (result.folderPath) {
@@ -226,7 +226,7 @@
 						disabled={isReadOnly}
 						class="flex items-center gap-2 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						<File class="h-4 w-4" />
+						<FileIcon class="h-4 w-4" />
 						폴더 선택
 					</button>
 				</div>
@@ -246,7 +246,7 @@
 						{/if}
 						{#if formData.mapFiles.metadataFile}
 							<div class="flex items-center gap-2">
-								<File class="h-4 w-4" />
+								<FileIcon class="h-4 w-4" />
 								메타데이터 폴더: {formData.mapFiles.metadataFile}
 							</div>
 						{/if}

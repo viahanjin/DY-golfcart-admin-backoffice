@@ -63,7 +63,7 @@
 		{ key: 'select', label: 'Select', class: 'w-12' },
 		{ key: 'courseName', label: '골프장명', sortable: true },
 		{ key: 'courseCode', label: '코드', sortable: true },
-		{ key: 'address.address1', label: '주소' },
+		{ key: 'address', label: '주소' },
 		{ key: 'totalCarts', label: '카트 수', sortable: true, class: 'text-center' },
 		{ key: 'status', label: '상태', sortable: true, class: 'text-center' },
 		{ key: 'lastModified', label: '최종 수정', sortable: true },
@@ -188,7 +188,7 @@
 		<svelte:fragment slot="filters">
 			<select
 				value={storeState.selectedStatus}
-				on:change={(e) => golfCourseStore.changeFilter(e.currentTarget.value)}
+				on:change={(e) => golfCourseStore.changeFilter(e.currentTarget.value as 'all' | 'active' | 'inactive' | 'maintenance')}
 				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			>
 				<option value="all">전체 상태</option>
@@ -212,7 +212,7 @@
 		totalPages={storeState.totalPages}
 		totalItems={storeState.total}
 		on:sort={(e) => golfCourseStore.changeSort(e.detail)}
-		on:select={(e) => golfCourseStore.toggleSelection(e.detail)}
+		on:select={(e) => golfCourseStore.toggleSelection(String(e.detail))}
 		on:selectAll={golfCourseStore.toggleSelectAll}
 		on:pageChange={(e) => golfCourseStore.changePage(e.detail)}
 	>
@@ -230,7 +230,9 @@
 		</svelte:fragment>
 
 		<svelte:fragment slot="cell-lastModified" let:item>
-			{formatDate(item.lastModified)}
+			<span class="text-gray-900 dark:text-gray-200">
+				{formatDate(item.lastModified)}
+			</span>
 		</svelte:fragment>
 
 		<svelte:fragment slot="cell-actions" let:item>

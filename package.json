@@ -15,7 +15,10 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"validate": "npm run check && npm run lint",
+		"precommit": "npm run validate",
+		"dev:check": "concurrently \"npm run dev\" \"npm run check:watch\""
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^4.0.1",
@@ -27,6 +30,7 @@
 		"@storybook/addon-vitest": "^9.0.14",
 		"@storybook/sveltekit": "^9.0.14",
 		"@sveltejs/adapter-auto": "^6.0.0",
+		"@sveltejs/adapter-node": "^5.3.1",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"@tailwindcss/forms": "^0.5.9",

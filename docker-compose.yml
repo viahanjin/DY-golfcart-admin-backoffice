@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # FastAPI 백엔드 서버
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - dy-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # SvelteKit 프론트엔드 개발 서버
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+      - PORT=3000
+      - VITE_API_BASE_URL=http://localhost:8000/api
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.svelte-kit
+    networks:
+      - dy-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  dy-network:
+    driver: bridge
+
+volumes:
+  uploads:
+    driver: local
