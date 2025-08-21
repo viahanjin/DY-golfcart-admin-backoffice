@@ -3,8 +3,7 @@
 	import { golfCourseStore, isLoading, errorMessage, selectedCount } from '$lib/stores/golf-course.store';
 	import { golfCourseService } from '$lib/services/golf-course.service';
 	import type { GolfCourse } from '$lib/types/golf-course';
-	import type { StatItem } from '$lib/components/common/StatsCards.svelte';
-	import type { ColumnDefinition } from '$lib/components/common/DataTable.svelte';
+	import type { StatItem, ColumnDefinition } from '$lib/types/common';
 
 	// Component Imports
 	import StatsCards from '$lib/components/common/StatsCards.svelte';
@@ -35,6 +34,11 @@
 	let showModal = false;
 	let modalMode: 'create' | 'edit' | 'view' = 'create';
 	let selectedCourse: GolfCourse | null = null;
+	
+	// 디버깅: showModal 상태 변화 감지
+	$: {
+		console.log('showModal changed:', showModal, 'modalMode:', modalMode);
+	}
 	let courseToDelete: GolfCourse | null = null;
 	let showDeleteDialog = false;
 	let showBulkDeleteDialog = false;
@@ -54,19 +58,19 @@
 	// --- Component Props ---
 	$: stats = storeState ? ([
 		{ label: '전체 골프장', value: storeState.total, icon: MapPin, color: 'text-blue-500' },
-		{ label: '운영중', value: storeState.items.filter((c: GolfCourse) => c.status === 'active').length, icon: Activity, color: 'text-green-500' },
-		{ label: '전체 카트', value: storeState.items.reduce((sum: number, c: GolfCourse) => sum + c.totalCarts, 0), icon: Car, color: 'text-purple-500' },
-		{ label: '정비중', value: storeState.items.filter((c: GolfCourse) => c.status === 'maintenance').length, icon: Clock, color: 'text-yellow-500' }
+		{ label: '운영중', value: storeState.items.filter((c: GolfCourse) => c.status === 'ACTIVE').length, icon: Activity, color: 'text-green-500' },
+		{ label: '전체 카트', value: storeState.items.reduce((sum: number, c: GolfCourse) => sum + c.cartsCount, 0), icon: Car, color: 'text-purple-500' },
+		{ label: '비활성', value: storeState.items.filter((c: GolfCourse) => c.status === 'INACTIVE').length, icon: Clock, color: 'text-yellow-500' }
 	] as StatItem[]) : [];
 
 	const columns: ColumnDefinition<GolfCourse>[] = [
 		{ key: 'select', label: 'Select', class: 'w-12' },
-		{ key: 'courseName', label: '골프장명', sortable: true },
-		{ key: 'courseCode', label: '코드', sortable: true },
-		{ key: 'address.address1', label: '주소' },
-		{ key: 'totalCarts', label: '카트 수', sortable: true, class: 'text-center' },
+		{ key: 'name', label: '골프장명', sortable: true },
+		{ key: 'id', label: '코드', sortable: true },
+		{ key: 'address', label: '주소' },
+		{ key: 'cartsCount', label: '카트 수', sortable: true, class: 'text-center' },
 		{ key: 'status', label: '상태', sortable: true, class: 'text-center' },
-		{ key: 'lastModified', label: '최종 수정', sortable: true },
+		{ key: 'updatedAt', label: '최종 수정', sortable: true },
 		{ key: 'actions', label: '액션', class: 'w-24 text-center' }
 	];
 
@@ -140,10 +144,6 @@
 		}
 	}
 
-	function formatDate(dateString: string) {
-		if (!dateString) return '';
-		return new Date(dateString).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-	}
 </script>
 
 {#if storeState}
@@ -188,13 +188,12 @@
 		<svelte:fragment slot="filters">
 			<select
 				value={storeState.selectedStatus}
-				on:change={(e) => golfCourseStore.changeFilter(e.currentTarget.value)}
+				on:change={(e) => golfCourseStore.changeFilter(e.currentTarget.value as any)}
 				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			>
 				<option value="all">전체 상태</option>
-				<option value="active">운영중</option>
-				<option value="inactive">비활성</option>
-				<option value="maintenance">정비중</option>
+				<option value="ACTIVE">운영중</option>
+				<option value="INACTIVE">비활성</option>
 			</select>
 		</svelte:fragment>
 	</FilterBar>
@@ -211,8 +210,11 @@
 		page={storeState.page}
 		totalPages={storeState.totalPages}
 		totalItems={storeState.total}
-		on:sort={(e) => golfCourseStore.changeSort(e.detail)}
-		on:select={(e) => golfCourseStore.toggleSelection(e.detail)}
+		on:sort={(e) => {
+			const newOrder = storeState.sortBy === e.detail && storeState.sortOrder === 'asc' ? 'desc' : 'asc';
+			golfCourseStore.changeSort({ sortBy: e.detail, sortOrder: newOrder } as any);
+		}}
+		on:select={(e) => golfCourseStore.toggleSelection(String(e.detail))}
 		on:selectAll={golfCourseStore.toggleSelectAll}
 		on:pageChange={(e) => golfCourseStore.changePage(e.detail)}
 	>
@@ -229,19 +231,15 @@
 			</span>
 		</svelte:fragment>
 
-		<svelte:fragment slot="cell-lastModified" let:item>
-			{formatDate(item.lastModified)}
-		</svelte:fragment>
-
 		<svelte:fragment slot="cell-actions" let:item>
 			<div class="flex items-center justify-center gap-1">
-				<button on:click={() => handleView(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700" title="상세보기">
+				<button on:click={() => handleView(item)} class="rounded-lg p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20" title="상세보기">
 					<Eye class="h-4 w-4" />
 				</button>
-				<button on:click={() => handleEdit(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700" title="수정">
+				<button on:click={() => handleEdit(item)} class="rounded-lg p-2 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20" title="수정">
 					<Edit class="h-4 w-4" />
 				</button>
-				<button on:click={() => handleDelete(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700" title="삭제">
+				<button on:click={() => handleDelete(item)} class="rounded-lg p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" title="삭제">
 					<Trash2 class="h-4 w-4" />
 				</button>
 			</div>
@@ -263,7 +261,7 @@
 {#if showDeleteDialog}
 	<ConfirmDialog
 		title="골프장 삭제"
-		message={`정말로 "${courseToDelete?.courseName}" 골프장을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.`}
+		message={`정말로 "${courseToDelete?.name}" 골프장을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.`}
 		confirmText="삭제"
 		danger={true}
 		on:confirm={confirmDelete}

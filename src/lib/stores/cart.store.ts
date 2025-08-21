@@ -1,6 +1,5 @@
-import { writable, derived } from 'svelte/store';
-import type { Cart, CartCreateInput, CartUpdateInput } from '$lib/types/cart';
-import mockCarts from '$lib/mock/carts.json';
+import { writable, derived, get } from 'svelte/store';
+import { cartService, type Cart, type CartCreateInput, type CartUpdateInput, type CartListParams } from '$lib/services/cart.service';
 
 interface CartState {
 	items: Cart[];
@@ -11,7 +10,7 @@ interface CartState {
 	loading: boolean;
 	error: { code: string; message: string } | null;
 	searchQuery: string;
-	selectedStatus: 'available' | 'maintenance' | 'broken' | 'unavailable' | 'all';
+	selectedStatus: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'CHARGING' | 'all';
 	sortBy: string;
 	sortOrder: 'asc' | 'desc';
 	selectedItems: Set<string>;
@@ -27,161 +26,267 @@ const initialState: CartState = {
 	error: null,
 	searchQuery: '',
 	selectedStatus: 'all',
-	sortBy: 'id',
-	sortOrder: 'asc',
+	sortBy: 'createdAt',
+	sortOrder: 'desc',
 	selectedItems: new Set()
 };
 
 function createCartStore() {
 	const { subscribe, set, update } = writable<CartState>(initialState);
 
-	async function loadCarts(params: any = {}) {
-		update(s => ({ ...s, loading: true }));
+	async function loadCarts(params: CartListParams = {}) {
+		update(s => ({ ...s, loading: true, error: null }));
 
-		// Mock data logic
-		const {
-			page = 1,
-			limit = 20,
-			search = '',
-			status = 'all',
-			sortBy = 'id',
-			sortOrder = 'asc'
-		} = params;
+		try {
+			const response = await cartService.getList({
+				page: params.page || 1,
+				limit: params.limit || 20,
+				search: params.search || '',
+				status: params.status || undefined,
+				golfCourseId: params.golfCourseId,
+				batteryLevel: params.batteryLevel,
+				sortBy: params.sortBy || 'createdAt',
+				sortOrder: params.sortOrder || 'desc'
+			});
 
-		let filtered: Cart[] = [...mockCarts];
-
-		if (status !== 'all') {
-			filtered = filtered.filter(c => c.cartStatus.currentState === status);
+			if (response.success && response.data) {
+				update(s => ({
+					...s,
+					items: response.data.items,
+					total: response.data.total,
+					page: response.data.page,
+					limit: response.data.limit,
+					totalPages: response.data.totalPages,
+					loading: false,
+					searchQuery: params.search || '',
+					selectedStatus: (params.status || 'all') as any,
+					sortBy: params.sortBy || 'createdAt',
+					sortOrder: params.sortOrder || 'desc'
+				}));
+			} else {
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'UNKNOWN', message: '알 수 없는 오류가 발생했습니다.' }
+				}));
+			}
+		} catch (error) {
+			console.error('Failed to load carts:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
 		}
-
-		if (search) {
-			const lowerSearch = search.toLowerCase();
-			filtered = filtered.filter(c =>
-				c.id.toLowerCase().includes(lowerSearch) ||
-				c.cartName.toLowerCase().includes(lowerSearch)
-			);
-		}
-
-		filtered.sort((a, b) => {
-			const aVal = (a as any)[sortBy];
-			const bVal = (b as any)[sortBy];
-			if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-			if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-			return 0;
-		});
-
-		const total = filtered.length;
-		const totalPages = Math.ceil(total / limit);
-		const paginatedItems = filtered.slice((page - 1) * limit, page * limit);
-
-		update(s => ({
-			...s,
-			items: paginatedItems,
-			total,
-			page,
-			limit,
-			totalPages,
-			loading: false,
-			searchQuery: search,
-			selectedStatus: status,
-			sortBy,
-			sortOrder
-		}));
 	}
 
 	async function changePage(page: number) {
-		const currentState = get(cartStore);
-		await loadCarts({ ...currentState, page });
+		update(s => ({ ...s, page }));
+		await loadCarts({ page });
 	}
 
-	async function search(query: string) {
-		await loadCarts({ page: 1, search: query, status: get(cartStore).selectedStatus });
+	async function changeLimit(limit: number) {
+		update(s => ({ ...s, limit, page: 1 }));
+		await loadCarts({ limit, page: 1 });
 	}
 
-	async function changeFilter(status: any) {
-		await loadCarts({ page: 1, search: get(cartStore).searchQuery, status });
+	async function setSearchQuery(query: string) {
+		update(s => ({ ...s, searchQuery: query, page: 1 }));
+		await loadCarts({ search: query, page: 1 });
 	}
 
-	async function changeSort(sortBy: string) {
-		const currentState = get(cartStore);
-		const sortOrder = currentState.sortBy === sortBy && currentState.sortOrder === 'asc' ? 'desc' : 'asc';
-		await loadCarts({ ...currentState, sortBy, sortOrder });
+	async function setStatusFilter(status: CartState['selectedStatus']) {
+		update(s => ({ ...s, selectedStatus: status, page: 1 }));
+		const statusParam = status === 'all' ? undefined : status;
+		await loadCarts({ status: statusParam, page: 1 });
 	}
 
-	function toggleSelection(id: string) {
-		update(state => {
-			const newSelectedItems = new Set(state.selectedItems);
-			if (newSelectedItems.has(id)) {
-				newSelectedItems.delete(id);
+	async function setSorting(sortBy: string, sortOrder: 'asc' | 'desc') {
+		update(s => ({ ...s, sortBy, sortOrder, page: 1 }));
+		await loadCarts({ sortBy, sortOrder, page: 1 });
+	}
+
+	function selectItem(id: string) {
+		update(s => ({
+			...s,
+			selectedItems: new Set(s.selectedItems).add(id)
+		}));
+	}
+
+	function deselectItem(id: string) {
+		update(s => {
+			const newSet = new Set(s.selectedItems);
+			newSet.delete(id);
+			return { ...s, selectedItems: newSet };
+		});
+	}
+
+	function selectAll() {
+		update(s => ({
+			...s,
+			selectedItems: new Set(s.items.map(item => item.id))
+		}));
+	}
+
+	function deselectAll() {
+		update(s => ({
+			...s,
+			selectedItems: new Set()
+		}));
+	}
+
+	async function createCart(data: CartCreateInput) {
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const response = await cartService.create(data);
+			
+			if (response.success) {
+				await loadCarts(); // 목록 새로고침
+				return response;
 			} else {
-				newSelectedItems.add(id);
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'CREATE_ERROR', message: '카트 생성에 실패했습니다.' }
+				}));
+				return response;
 			}
-			return { ...state, selectedItems: newSelectedItems };
-		});
+		} catch (error) {
+			console.error('Failed to create cart:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
+			return { success: false, error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' } };
+		}
 	}
 
-	function toggleSelectAll() {
-		update(state => {
-			const allIds = state.items.map(item => item.id);
-			const newSelectedItems = state.selectedItems.size === allIds.length
-				? new Set<string>()
-				: new Set(allIds);
-			return { ...state, selectedItems: newSelectedItems };
-		});
+	async function updateCart(id: string, data: CartUpdateInput) {
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const response = await cartService.update(id, data);
+			
+			if (response.success) {
+				await loadCarts(); // 목록 새로고침
+				return response;
+			} else {
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'UPDATE_ERROR', message: '카트 수정에 실패했습니다.' }
+				}));
+				return response;
+			}
+		} catch (error) {
+			console.error('Failed to update cart:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
+			return { success: false, error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' } };
+		}
+	}
+
+	async function deleteCart(id: string) {
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const response = await cartService.delete(id);
+			
+			if (response.success) {
+				await loadCarts(); // 목록 새로고침
+				return response;
+			} else {
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error || { code: 'DELETE_ERROR', message: '카트 삭제에 실패했습니다.' }
+				}));
+				return response;
+			}
+		} catch (error) {
+			console.error('Failed to delete cart:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' }
+			}));
+			return { success: false, error: { code: 'NETWORK_ERROR', message: '네트워크 오류가 발생했습니다.' } };
+		}
+	}
+
+	async function deleteSelectedCarts() {
+		const state = get(cartStore);
+		const selectedIds = Array.from(state.selectedItems);
+		
+		if (selectedIds.length === 0) return;
+
+		update(s => ({ ...s, loading: true, error: null }));
+
+		try {
+			const deletePromises = selectedIds.map(id => cartService.delete(id));
+			await Promise.all(deletePromises);
+			
+			await loadCarts(); // 목록 새로고침
+			deselectAll(); // 선택 해제
+		} catch (error) {
+			console.error('Failed to delete selected carts:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'BULK_DELETE_ERROR', message: '일괄 삭제에 실패했습니다.' }
+			}));
+		}
 	}
 
 	function clearError() {
 		update(s => ({ ...s, error: null }));
 	}
 
-	// Mock CRUD operations
-	async function createCart(data: CartCreateInput) {
-		console.log("Creating cart", data);
-		await loadCarts();
-		return true;
-	}
-	async function updateCart(id: string, data: CartUpdateInput) {
-		console.log("Updating cart", id, data);
-		await loadCarts();
-		return true;
-	}
-	async function deleteCart(id: string) {
-		console.log("Deleting cart", id);
-		await loadCarts();
-		return true;
-	}
-	async function bulkDelete() {
-		console.log("Bulk deleting carts", get(cartStore).selectedItems);
-		update(s => ({...s, selectedItems: new Set()}));
-		await loadCarts();
-		return true;
-	}
-
 	return {
 		subscribe,
 		loadCarts,
 		changePage,
-		search,
-		changeFilter,
-		changeSort,
-		toggleSelection,
-		toggleSelectAll,
-		clearError,
+		changeLimit,
+		search: setSearchQuery,
+		changeFilter: setStatusFilter,
+		changeSort: (params: { sortBy: string; sortOrder: 'asc' | 'desc' }) => setSorting(params.sortBy, params.sortOrder),
+		selectItem,
+		deselectItem,
+		toggleSelection: (id: string) => {
+			const state = get(cartStore);
+			if (state.selectedItems.has(id)) {
+				deselectItem(id);
+			} else {
+				selectItem(id);
+			}
+		},
+		selectAll,
+		deselectAll,
+		toggleSelectAll: () => {
+			const state = get(cartStore);
+			if (state.selectedItems.size === state.items.length) {
+				deselectAll();
+			} else {
+				selectAll();
+			}
+		},
 		createCart,
 		updateCart,
 		deleteCart,
-		bulkDelete,
+		bulkDelete: deleteSelectedCarts,
+		clearError
 	};
 }
 
 export const cartStore = createCartStore();
 
-function get<T>(store: { subscribe: (fn: (value: T) => void) => () => void }): T {
-	let value: T;
-	store.subscribe((v) => (value = v))();
-	return value!;
-}
+// Derived stores
+export const isLoading = derived(cartStore, $state => $state.loading);
+export const errorMessage = derived(cartStore, $state => $state.error?.message || null);
+export const selectedCount = derived(cartStore, $state => $state.selectedItems.size);
 
-export const isLoading = derived(cartStore, $s => $s.loading);
-export const errorMessage = derived(cartStore, $s => $s.error?.message || null);
-export const selectedCount = derived(cartStore, $s => $s.selectedItems.size);

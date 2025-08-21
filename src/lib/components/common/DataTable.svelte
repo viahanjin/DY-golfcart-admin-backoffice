@@ -1,15 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Loader2, CheckSquare, Square } from 'lucide-svelte';
-	import type { SvelteComponent, ComponentType } from 'svelte';
-
-	// --- TYPES ---
-	export type ColumnDefinition<T extends Record<string, any>> = {
-		key: (keyof T & string) | 'select' | 'actions';
-		label: string;
-		sortable?: boolean;
-		class?: string; // e.g. 'w-24 text-center'
-	};
+	import type { ColumnDefinition } from '$lib/types/common';
 
 	// --- PROPS ---
 	export let items: any[] = [];
@@ -41,6 +33,14 @@
 	$: fromItem = (page - 1) * itemsPerPage + 1;
 	$: toItem = Math.min(page * itemsPerPage, totalItems);
 
+	// Declare slots interface
+	interface $$Slots {
+		'empty-state': {};
+		'cell-status': { item: any };
+		'cell-actions': { item: any };
+		[key: `cell-${string}`]: { item: any };
+	}
+
 	// --- HELPERS ---
 	// Safely access nested properties like 'address.city'
 	function get(obj: any, path: string): any {
@@ -48,7 +48,7 @@
 	}
 </script>
 
-<div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+<div class="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
 	{#if loading && items.length === 0}
 		<div class="flex h-80 items-center justify-center">
 			<Loader2 class="h-8 w-8 animate-spin text-blue-500" />
@@ -65,11 +65,11 @@
 	{:else}
 		<div class="overflow-x-auto">
 			<table class="w-full">
-				<thead class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50">
+				<thead class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
 					<tr>
 						{#each columns as column}
 							<th
-								class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 {column.class ||
+								class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300 {column.class ||
 									''}"
 							>
 								{#if column.key === 'select'}
@@ -87,7 +87,7 @@
 								{:else if column.sortable}
 									<button
 										on:click={() => dispatch('sort', column.key)}
-										class="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
+										class="flex items-center gap-1 transition-colors hover:text-gray-900 dark:hover:text-white"
 									>
 										{column.label}
 										{#if sortBy === column.key}
@@ -105,9 +105,9 @@
 				</thead>
 				<tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
 					{#each items as item (item[idKey])}
-						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+						<tr>
 							{#each columns as column (column.key)}
-								<td class="whitespace-nowrap px-4 py-3 text-sm {column.class || ''}">
+								<td class="whitespace-nowrap px-6 py-4 text-sm {column.class || ''}">
 									{#if column.key === 'select'}
 										<button
 											on:click={() => dispatch('select', item[idKey])}
@@ -119,10 +119,20 @@
 												<Square class="h-4 w-4 text-gray-400" />
 											{/if}
 										</button>
-									{:else if $$slots[`cell-${String(column.key)}`]}
-										<slot name="cell-{String(column.key)}" {item} />
+									{:else if column.key === 'status'}
+										<slot name="cell-status" {item}>
+											<span class="font-medium text-white">
+												{get(item, String(column.key))}
+											</span>
+										</slot>
+									{:else if column.key === 'actions'}
+										<slot name="cell-actions" {item}>
+											<span class="font-medium text-white">
+												{get(item, String(column.key))}
+											</span>
+										</slot>
 									{:else}
-										<span class="text-gray-900 dark:text-gray-200">
+										<span class="font-medium text-white">
 											{get(item, String(column.key))}
 										</span>
 									{/if}
@@ -137,25 +147,25 @@
 		<!-- Pagination -->
 		{#if totalPages > 1}
 			<div
-				class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800"
+				class="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-900"
 			>
 				<div class="text-sm text-gray-700 dark:text-gray-200">
 					<span class="font-medium">{totalItems}</span>개 중
 					<span class="font-medium">{fromItem}</span>-<span class="font-medium">{toItem}</span>
 					표시
 				</div>
-				<div class="flex gap-1">
+				<div class="flex gap-2">
 					<button
 						on:click={() => dispatch('pageChange', page - 1)}
 						disabled={page === 1}
-						class="rounded-md px-3 py-1 text-sm enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 dark:enabled:hover:bg-gray-700 dark:disabled:text-gray-500"
+						class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors enabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:enabled:hover:bg-gray-700"
 					>
 						이전
 					</button>
 					<button
 						on:click={() => dispatch('pageChange', page + 1)}
 						disabled={page === totalPages}
-						class="rounded-md px-3 py-1 text-sm enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 dark:enabled:hover:bg-gray-700 dark:disabled:text-gray-500"
+						class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors enabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:enabled:hover:bg-gray-700"
 					>
 						다음
 					</button>

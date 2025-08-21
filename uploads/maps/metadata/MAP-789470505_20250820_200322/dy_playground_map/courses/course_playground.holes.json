@@ -1,0 +1,34 @@
+{
+  "H01": {
+    "hole_name": "1번홀",
+    "start_point_id": "P00",
+    "end_point_id": "P420",
+    "segments": [
+      {
+        "segment_id": "H01_S01",
+        "start_point_id": "P00",
+        "end_point_id": "P420",
+        "driving_profile": {
+          "mode": "auto",
+          "speed_kmh": 11
+        }
+      }
+    ]
+  },
+  "H02": {
+    "hole_name": "2번홀",
+    "start_point_id": "P861",
+    "end_point_id": "P1373",
+    "segments": [
+      {
+        "segment_id": "H02_S01",
+        "start_point_id": "P861",
+        "end_point_id": "P1373",
+        "driving_profile": {
+          "mode": "auto",
+          "speed_kmh": 20
+        }
+      }
+    ]
+  }
+}

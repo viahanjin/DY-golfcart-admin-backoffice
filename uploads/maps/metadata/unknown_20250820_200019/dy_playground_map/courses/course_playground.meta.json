@@ -1,0 +1,18 @@
+{
+  "course_id": "dy_playground_course",
+  "course_name": "운동장코스",
+  "course_type": "playground",
+  "description": "테스트용 운동장 코스",
+  "start_point_id": "P00",
+  "end_point_id": "P1373",
+  "holes": [
+    {
+      "hole_id": "H01",
+      "hole_name": "1번홀",
+    },
+    {
+      "hole_id": "H02",
+      "hole_name": "2번홀"
+    }
+  ],
+}

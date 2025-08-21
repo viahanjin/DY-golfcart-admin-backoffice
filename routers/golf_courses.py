@@ -32,13 +32,55 @@ async def get_golf_courses(page: int = 1, limit: int = 20, search: Optional[str]
             },
             "createdAt": "2024-01-15T09:00:00Z",
             "updatedAt": "2024-01-15T09:00:00Z"
+          },
+          {
+            "id": "GC-002",
+            "name": "오션뷰 골프클럽",
+            "address": "부산광역시 해운대구 해운대로 456",
+            "postalCode": "48093",
+            "phone": "051-9876-5432",
+            "email": "info@oceanview.com",
+            "status": "ACTIVE",
+            "coursesCount": 27,
+            "cartsCount": 75,
+            "location": {
+              "latitude": 35.1796,
+              "longitude": 129.0756
+            },
+            "operatingHours": {
+              "weekday": "06:00-18:00",
+              "weekend": "05:00-19:00"
+            },
+            "createdAt": "2024-01-10T09:00:00Z",
+            "updatedAt": "2024-01-10T09:00:00Z"
+          },
+          {
+            "id": "GC-003",
+            "name": "마운틴 골프클럽",
+            "address": "경기도 가평군 설악면 산길 789",
+            "postalCode": "12345",
+            "phone": "031-1111-2222",
+            "email": "info@mountain.com",
+            "status": "INACTIVE",
+            "coursesCount": 18,
+            "cartsCount": 40,
+            "location": {
+              "latitude": 37.8312,
+              "longitude": 127.5047
+            },
+            "operatingHours": {
+              "weekday": "07:00-17:00",
+              "weekend": "06:00-18:00"
+            },
+            "createdAt": "2024-01-05T09:00:00Z",
+            "updatedAt": "2024-01-05T09:00:00Z"
           }
         ],
         "pagination": {
           "page": page,
           "limit": limit,
           "total": 45,
-          "totalPages": (45 // limit) + 1
+          "totalPages": 3
         }
       }
     }

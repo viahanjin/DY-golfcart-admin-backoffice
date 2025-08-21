@@ -6,10 +6,15 @@
 	interface Course {
 		courseId: string;
 		courseName: string;
+		courseCode: string;
 		golfCourseId: string;
 		golfCourseName: string;
+		courseOrder: number;
 		holeCount: number;
-		difficulty: '초급' | '중급' | '고급';
+		courseType: string;
+		difficulty: string; // JSON에서는 일반 string으로 되어 있음
+		length: number;
+		avgSlope: number;
 		hasMap: boolean;
 	}
 
@@ -59,8 +64,8 @@
 	<!-- 헤더 -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="mb-1 text-2xl font-bold">코스 관리</h1>
-			<p class="text-gray-600">골프장별 코스를 관리하고 맵을 연결합니다.</p>
+			<h1 class="mb-1 text-2xl font-bold text-gray-900 dark:text-white">코스 관리</h1>
+			<p class="text-gray-600 dark:text-gray-400">골프장별 코스를 관리하고 맵을 연결합니다.</p>
 		</div>
 		<button on:click={handleCreate} class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
 			<Plus class="h-4 w-4" />
@@ -80,11 +85,11 @@
 							<p class="text-sm text-gray-500 dark:text-gray-400">{course.holeCount}홀, {course.difficulty}</p>
 							<div class="my-4 flex items-center justify-center gap-2 {course.hasMap ? 'text-green-500' : 'text-red-500'}">
 								<Map class="h-5 w-5" />
-								<span>맵: {course.hasMap ? '있음' : '없음'}</span>
+								<span class="text-sm font-medium">맵: {course.hasMap ? '있음' : '없음'}</span>
 							</div>
 							<div class="mt-auto flex justify-center gap-2">
-								<button on:click={() => handleEdit(course)} class="btn-secondary text-sm">수정</button>
-								<button on:click={() => handleMapEdit(course)} class="btn-secondary text-sm">맵 편집</button>
+								<button on:click={() => handleEdit(course)} class="rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">수정</button>
+								<button on:click={() => handleMapEdit(course)} class="rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">맵 편집</button>
 							</div>
 						</div>
 					{/each}
