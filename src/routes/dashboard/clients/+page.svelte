@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { golfCourseStore, isLoading, errorMessage, selectedCount } from '$lib/stores/golf-course.store';
+	import {
+		golfCourseStore,
+		isLoading,
+		errorMessage,
+		selectedCount
+	} from '$lib/stores/golf-course.store';
 	import { golfCourseService } from '$lib/services/golf-course.service';
 	import type { GolfCourse } from '$lib/types/golf-course';
 	import type { StatItem } from '$lib/components/common/StatsCards.svelte';
@@ -12,24 +17,37 @@
 	import DataTable from '$lib/components/common/DataTable.svelte';
 	import GolfCourseModal from '$lib/components/golf/GolfCourseModal.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
-	
+
 	// Icon Imports
-	import { Building2, Activity, Car, Clock, Eye, Edit, Trash2, AlertCircle, X, Users, Target, TrendingUp } from 'lucide-svelte';
+	import {
+		Building2,
+		Activity,
+		Car,
+		Clock,
+		Eye,
+		Edit,
+		Trash2,
+		AlertCircle,
+		X,
+		Users,
+		Target,
+		TrendingUp
+	} from 'lucide-svelte';
 
 	// --- Store and State ---
 	let storeState: any;
-	const unsubscribeStore = golfCourseStore.subscribe(value => {
+	const unsubscribeStore = golfCourseStore.subscribe((value) => {
 		storeState = value;
 	});
 
 	let loading = false;
-	const unsubscribeLoading = isLoading.subscribe(value => loading = value);
+	const unsubscribeLoading = isLoading.subscribe((value) => (loading = value));
 
 	let error: string | null = null;
-	const unsubscribeError = errorMessage.subscribe(value => error = value);
-	
+	const unsubscribeError = errorMessage.subscribe((value) => (error = value));
+
 	let currentSelectedCount = 0;
-	const unsubscribeSelected = selectedCount.subscribe(value => currentSelectedCount = value);
+	const unsubscribeSelected = selectedCount.subscribe((value) => (currentSelectedCount = value));
 
 	// Modal and Dialog state
 	let showModal = false;
@@ -52,21 +70,38 @@
 	});
 
 	// --- Component Props (제조사 관점으로 수정) ---
-	$: stats = storeState ? ([
-		{ label: '총 고객사', value: storeState.total, icon: Building2, color: 'text-blue-500' },
-		{ label: '활성 고객사', value: storeState.items.filter((c: GolfCourse) => c.status === 'active').length, icon: Activity, color: 'text-green-500' },
-		{ label: '납품 카트', value: storeState.items.reduce((sum: number, c: GolfCourse) => sum + c.totalCarts, 0), icon: Car, color: 'text-purple-500' },
-		{ label: '잠재 고객', value: storeState.items.filter((c: GolfCourse) => c.status === 'maintenance').length, icon: Target, color: 'text-yellow-500' }
-	] as StatItem[]) : [];
+	$: stats = storeState
+		? ([
+				{ label: '총 고객사', value: storeState.total, icon: Building2, color: 'text-blue-500' },
+				{
+					label: '활성 고객사',
+					value: storeState.items.filter((c: GolfCourse) => c.status === 'active').length,
+					icon: Activity,
+					color: 'text-green-500'
+				},
+				{
+					label: '납품 카트',
+					value: storeState.items.reduce((sum: number, c: GolfCourse) => sum + c.totalCarts, 0),
+					icon: Car,
+					color: 'text-purple-500'
+				},
+				{
+					label: '잠재 고객',
+					value: storeState.items.filter((c: GolfCourse) => c.status === 'maintenance').length,
+					icon: Target,
+					color: 'text-yellow-500'
+				}
+			] as StatItem[])
+		: [];
 
 	const columns: ColumnDefinition<GolfCourse>[] = [
 		{ key: 'select', label: 'Select', class: 'w-12' },
-		{ key: 'courseName', label: '고객사명', sortable: true },
-		{ key: 'courseCode', label: '고객사 코드', sortable: true },
-		{ key: 'address', label: '주소' },
-		{ key: 'totalCarts', label: '납품 카트', sortable: true, class: 'text-center' },
-		{ key: 'status', label: '계약 상태', sortable: true, class: 'text-center' },
-		{ key: 'lastModified', label: '최근 업데이트', sortable: true },
+		{ key: 'courseName', label: '고객사명', sortable: true, class: 'min-w-[120px]' },
+		{ key: 'courseCode', label: '고객사 코드', sortable: true, class: 'w-28' },
+		{ key: 'address', label: '주소', class: 'min-w-[150px] max-w-[200px]' },
+		{ key: 'totalCarts', label: '배치 카트 총 대수', sortable: true, class: 'w-32 text-center' },
+		{ key: 'status', label: '계약 상태', sortable: true, class: 'w-28 text-center' },
+		{ key: 'lastModified', label: '최근 업데이트', sortable: true, class: 'w-32' },
 		{ key: 'actions', label: '관리', class: 'w-24 text-center' }
 	];
 
@@ -133,16 +168,35 @@
 	// --- Helper Functions ---
 	function getStatusInfo(status: string) {
 		switch (status) {
-			case 'active': return { color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/50', text: '활성 계약' };
-			case 'inactive': return { color: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700', text: '계약 종료' };
-			case 'maintenance': return { color: 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/50', text: '영업 진행' };
-			default: return { color: 'text-gray-600 bg-gray-100', text: '알 수 없음' };
+			case 'active':
+				return {
+					color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/50',
+					text: '활성 계약'
+				};
+			case 'inactive':
+				return {
+					color: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700',
+					text: '계약 종료'
+				};
+			case 'maintenance':
+				return {
+					color: 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/50',
+					text: '영업 진행'
+				};
+			default:
+				return { color: 'text-gray-600 bg-gray-100', text: '알 수 없음' };
 		}
 	}
 
 	function formatDate(dateString: string) {
 		if (!dateString) return '';
-		return new Date(dateString).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+		return new Date(dateString).toLocaleDateString('ko-KR', {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
 	}
 
 	// 고객사 상세 페이지로 이동 (카트/맵 관리)
@@ -153,60 +207,89 @@
 </script>
 
 {#if storeState}
-<div class="p-4 md:p-6">
-	<!-- Header -->
-	<div class="mb-6">
-		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">고객사 관리</h1>
-		<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-			DY 골프카트를 사용하는 골프장 고객사들을 관리합니다.
-		</p>
-	</div>
+	<div class="p-4 md:p-6">
+		<!-- Header -->
+		<div class="mb-6">
+			<h1 class="text-2xl font-bold text-gray-900 dark:text-white">고객사 관리</h1>
+			<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+				DY 골프카트를 사용하는 골프장 고객사들을 관리합니다.
+			</p>
+		</div>
 
-	<!-- Error Message -->
-	{#if error}
-		<div class="mb-4 flex items-center justify-between rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-			<div class="flex items-center">
-				<AlertCircle class="h-5 w-5 text-red-400" />
-				<p class="ml-3 text-sm text-red-800 dark:text-red-300">{error}</p>
+		<!-- Error Message -->
+		{#if error}
+			<div
+				class="mb-4 flex items-center justify-between rounded-lg bg-red-50 p-4 dark:bg-red-900/20"
+			>
+				<div class="flex items-center">
+					<AlertCircle class="h-5 w-5 text-red-400" />
+					<p class="ml-3 text-sm text-red-800 dark:text-red-300">{error}</p>
+				</div>
+				<button
+					on:click={golfCourseStore.clearError}
+					class="text-red-500 hover:text-red-700"
+					aria-label="Close error message"
+				>
+					<X class="h-4 w-4" />
+				</button>
 			</div>
-			<button on:click={golfCourseStore.clearError} class="text-red-500 hover:text-red-700" aria-label="Close error message">
-				<X class="h-4 w-4" />
+		{/if}
+
+		<!-- Stats Cards -->
+		<StatsCards {stats} />
+
+		<!-- 빠른 액션 카드들 -->
+		<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			<button
+				type="button"
+				class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-blue-900/20"
+				on:click={handleCreate}
+			>
+				<div
+					class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50"
+				>
+					<Building2 class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+				</div>
+				<p class="text-sm font-medium text-gray-900 dark:text-white">새 고객사 등록</p>
+			</button>
+
+			<button
+				type="button"
+				class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-green-400 hover:bg-green-50 dark:border-gray-600 dark:hover:border-green-500 dark:hover:bg-green-900/20"
+			>
+				<div
+					class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50"
+				>
+					<Car class="h-6 w-6 text-green-600 dark:text-green-400" />
+				</div>
+				<p class="text-sm font-medium text-gray-900 dark:text-white">카트 납품 등록</p>
+			</button>
+
+			<button
+				type="button"
+				class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-purple-400 hover:bg-purple-50 dark:border-gray-600 dark:hover:border-purple-500 dark:hover:bg-purple-900/20"
+			>
+				<div
+					class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50"
+				>
+					<TrendingUp class="h-6 w-6 text-purple-600 dark:text-purple-400" />
+				</div>
+				<p class="text-sm font-medium text-gray-900 dark:text-white">영업 기회 추가</p>
 			</button>
 		</div>
-	{/if}
 
-	<!-- Stats Cards -->
-	<StatsCards {stats} />
-
-	<!-- 빠른 액션 카드들 -->
-	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-blue-900/20" on:click={handleCreate}>
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-				<Building2 class="h-6 w-6 text-blue-600 dark:text-blue-400" />
-			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">새 고객사 등록</p>
-		</div>
-		
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-green-400 hover:bg-green-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-green-500 dark:hover:bg-green-900/20">
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-				<Car class="h-6 w-6 text-green-600 dark:text-green-400" />
-			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">카트 납품 등록</p>
-		</div>
-		
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-purple-400 hover:bg-purple-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-purple-500 dark:hover:bg-purple-900/20">
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50">
-				<TrendingUp class="h-6 w-6 text-purple-600 dark:text-purple-400" />
-			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">영업 기회 추가</p>
-		</div>
-		
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-yellow-400 hover:bg-yellow-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-yellow-500 dark:hover:bg-yellow-900/20" on:click={handleExport}>
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50">
+		<button
+			type="button"
+			class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-yellow-400 hover:bg-yellow-50 dark:border-gray-600 dark:hover:border-yellow-500 dark:hover:bg-yellow-900/20"
+			on:click={handleExport}
+		>
+			<div
+				class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50"
+			>
 				<Users class="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
 			</div>
 			<p class="text-sm font-medium text-gray-900 dark:text-white">고객사 리포트</p>
-		</div>
+		</button>
 	</div>
 
 	<!-- Filter Bar -->
@@ -215,7 +298,7 @@
 		searchPlaceholder="고객사명, 코드, 주소 검색..."
 		createLabel="고객사 추가"
 		selectedCount={currentSelectedCount}
-		loading={loading}
+		{loading}
 		on:search={(e) => golfCourseStore.search(e.detail)}
 		on:refresh={() => golfCourseStore.loadGolfCourses()}
 		on:create={handleCreate}
@@ -225,7 +308,10 @@
 		<svelte:fragment slot="filters">
 			<select
 				value={storeState.selectedStatus}
-				on:change={(e) => golfCourseStore.changeFilter(e.currentTarget.value as 'all' | 'active' | 'inactive' | 'maintenance')}
+				on:change={(e) =>
+					golfCourseStore.changeFilter(
+						e.currentTarget.value as 'all' | 'active' | 'inactive' | 'maintenance'
+					)}
 				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			>
 				<option value="all">전체 상태</option>
@@ -241,7 +327,7 @@
 		items={storeState.items}
 		{columns}
 		idKey="id"
-		loading={loading}
+		{loading}
 		selectedItems={storeState.selectedItems}
 		sortBy={storeState.sortBy}
 		sortOrder={storeState.sortOrder}
@@ -253,11 +339,58 @@
 		on:selectAll={golfCourseStore.toggleSelectAll}
 		on:pageChange={(e) => golfCourseStore.changePage(e.detail)}
 	>
-		<div slot="empty-state" class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+		<div
+			slot="empty-state"
+			class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400"
+		>
 			<Building2 class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
 			<p class="text-lg font-medium">등록된 고객사가 없습니다</p>
 			<p class="mt-1 text-sm">새로운 고객사를 추가해주세요.</p>
 		</div>
+
+		<svelte:fragment slot="cell-address" let:item>
+			{#if item.address && typeof item.address === 'object'}
+				{@const fullAddress =
+					`${item.address.address1 || ''} ${item.address.address2 || ''}`.trim()}
+				<div class="group relative">
+					<span class="block truncate text-gray-900 dark:text-gray-200">
+						{fullAddress || '-'}
+					</span>
+					{#if fullAddress && fullAddress.length > 30}
+						<div
+							class="absolute top-full left-0 z-50 mt-1 hidden w-max max-w-xs rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg group-hover:block dark:bg-gray-700"
+						>
+							{fullAddress}
+							<div
+								class="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"
+							></div>
+						</div>
+					{/if}
+				</div>
+			{:else if item.address}
+				<div class="group relative">
+					<span class="block truncate text-gray-900 dark:text-gray-200">
+						{item.address}
+					</span>
+					{#if item.address.length > 30}
+						<div
+							class="absolute top-full left-0 z-50 mt-1 hidden w-max max-w-xs rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg group-hover:block dark:bg-gray-700"
+						>
+							{item.address}
+							<div
+								class="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"
+							></div>
+						</div>
+					{/if}
+				</div>
+			{:else}
+				<span class="text-gray-900 dark:text-gray-200">-</span>
+			{/if}
+		</svelte:fragment>
+
+		<svelte:fragment slot="cell-totalCarts" let:item>
+			<span class="text-center font-medium dark:text-gray-200">{item.totalCarts || 0} 대</span>
+		</svelte:fragment>
 
 		<svelte:fragment slot="cell-status" let:item>
 			{@const status = getStatusInfo(item.status)}
@@ -274,26 +407,37 @@
 
 		<svelte:fragment slot="cell-actions" let:item>
 			<div class="flex items-center justify-center gap-1">
-				<button on:click={() => handleView(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700" title="상세보기">
+				<button
+					on:click={() => handleView(item)}
+					class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700"
+					title="상세보기"
+				>
 					<Eye class="h-4 w-4" />
 				</button>
-				<button on:click={() => handleEdit(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700" title="수정">
+				<button
+					on:click={() => handleEdit(item)}
+					class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700"
+					title="수정"
+				>
 					<Edit class="h-4 w-4" />
 				</button>
-				<button on:click={() => handleDelete(item)} class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700" title="삭제">
+				<button
+					on:click={() => handleDelete(item)}
+					class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700"
+					title="삭제"
+				>
 					<Trash2 class="h-4 w-4" />
 				</button>
 			</div>
 		</svelte:fragment>
 	</DataTable>
-</div>
 {/if}
 
 <!-- Modals and Dialogs -->
 {#if showModal}
 	<GolfCourseModal
 		{modalMode}
-		selectedCourse={selectedCourse}
+		{selectedCourse}
 		on:close={() => (showModal = false)}
 		on:save={handleModalSave}
 	/>

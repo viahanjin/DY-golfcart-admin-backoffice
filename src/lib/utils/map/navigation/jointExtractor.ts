@@ -1,4 +1,4 @@
-import type { Course, SegmentCourse } from "../../types/map";
+import type { Course, SegmentCourse } from "$lib/types/map";
 import type { Coordinate } from "../../types/protocol";
 
 /**

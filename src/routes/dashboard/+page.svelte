@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import {
 		Building2,
 		Car,
@@ -19,6 +20,7 @@
 	
 	// Store Imports
 	import { golfCourseStore } from '$lib/stores/golf-course.store';
+	import type { GolfCourse } from '$lib/types/golf-course';
 
 	// 제조사 관점의 비즈니스 데이터
 	let businessStats = {
@@ -103,10 +105,11 @@
 	// Modal state
 	let showClientModal = false;
 	let modalMode: 'create' | 'edit' | 'view' = 'create';
+	let selectedClient: GolfCourse | null = null;
 
 	// 빠른 액션 함수들
 	function navigateToClients() {
-		window.location.href = '/dashboard/clients';
+		goto('/dashboard/clients');
 	}
 
 	function navigateToCarts() {
@@ -119,32 +122,53 @@
 
 	function handleCreateClient() {
 		modalMode = 'create';
+		selectedClient = null;
 		showClientModal = true;
 	}
 
+	function handleClientClick(clientName: string) {
+		// 고객사 데이터에서 해당 고객사 찾기
+		if (golfCourseData && golfCourseData.items) {
+			const client = golfCourseData.items.find((item: any) => item.courseName === clientName);
+			if (client) {
+				selectedClient = client;
+				modalMode = 'edit';
+				showClientModal = true;
+			}
+		}
+	}
+
 	async function handleClientModalSave(event: CustomEvent) {
-		const { data } = event.detail;
+		const { mode, data } = event.detail;
 		
 		try {
-			// 실제 고객사(골프장) 생성 API 호출
-			const success = await golfCourseStore.createGolfCourse(data);
+			let success = false;
+			
+			if (mode === 'create') {
+				// 새 고객사 생성
+				success = await golfCourseStore.createGolfCourse(data);
+				if (success) {
+					alert('새 고객사가 성공적으로 등록되었습니다!');
+					businessStats.totalClients += 1;
+					businessStats.activeClients += 1;
+				}
+			} else if (mode === 'edit' && selectedClient) {
+				// 기존 고객사 수정
+				success = await golfCourseStore.updateGolfCourse(selectedClient.id, data);
+				if (success) {
+					alert('고객사 정보가 성공적으로 수정되었습니다!');
+				}
+			}
 			
 			if (success) {
-				// 성공 시 모달 닫기
 				showClientModal = false;
-				
-				// 성공 메시지 표시
-				alert('새 고객사가 성공적으로 등록되었습니다!');
-				
-				// 통계 업데이트 (실제로는 store에서 자동으로 업데이트)
-				businessStats.totalClients += 1;
-				businessStats.activeClients += 1;
+				selectedClient = null;
 			} else {
-				alert('고객사 등록 중 오류가 발생했습니다.');
+				alert(`고객사 ${mode === 'create' ? '등록' : '수정'} 중 오류가 발생했습니다.`);
 			}
 		} catch (error) {
-			console.error('고객사 등록 실패:', error);
-			alert('고객사 등록 중 오류가 발생했습니다.');
+			console.error(`고객사 ${mode === 'create' ? '등록' : '수정'} 실패:`, error);
+			alert(`고객사 ${mode === 'create' ? '등록' : '수정'} 중 오류가 발생했습니다.`);
 		}
 	}
 
@@ -324,7 +348,7 @@
 			
 			<div class="space-y-3">
 				{#each recentClients as client}
-					<button type="button" class="w-full flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition-colors text-left dark:border-gray-700 dark:hover:bg-gray-700/50" on:click={() => navigateToClients()}>
+					<button type="button" class="w-full flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition-colors text-left dark:border-gray-700 dark:hover:bg-gray-700/50" on:click={() => handleClientClick(client.name)}>
 						<div>
 							<div class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">{client.name}</div>
 							<div class="text-sm text-gray-500 dark:text-gray-400">
@@ -409,12 +433,15 @@
 	</div>
 </div>
 
-<!-- 고객사 등록 모달 -->
+<!-- 고객사 등록/수정 모달 -->
 {#if showClientModal}
 	<GolfCourseModal
 		{modalMode}
-		selectedCourse={null}
-		on:close={() => (showClientModal = false)}
+		selectedCourse={selectedClient}
+		on:close={() => {
+			showClientModal = false;
+			selectedClient = null;
+		}}
 		on:save={handleClientModalSave}
 	/>
 {/if}

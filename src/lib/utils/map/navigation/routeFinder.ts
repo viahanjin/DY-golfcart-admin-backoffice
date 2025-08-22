@@ -2,7 +2,7 @@ import type {
   GolfCourseMapData,
   NodeFeature,
   RouteFeature,
-} from "../../types/map";
+} from "$lib/types/map";
 
 /**
  * 골프카트 네비게이션에서 다음 루트 찾기

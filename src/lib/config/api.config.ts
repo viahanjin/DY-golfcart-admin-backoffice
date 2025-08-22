@@ -9,6 +9,7 @@ interface ApiConfig {
 	endpoints: {
 		golfCourses: string;
 		carts: string;
+		cartModels: string;
 		courses: string;
 		maps: string;
 		users: string;
@@ -21,7 +22,7 @@ interface ApiConfig {
 }
 
 // 환경변수에서 API URL을 가져오거나 기본값 사용
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const apiConfig: ApiConfig = {
 	baseURL: API_BASE_URL,
@@ -29,6 +30,7 @@ export const apiConfig: ApiConfig = {
 	endpoints: {
 		golfCourses: '/golf-courses',
 		carts: '/carts',
+		cartModels: '/cart-models',
 		courses: '/courses',
 		maps: '/maps',
 		users: '/users',

@@ -54,7 +54,7 @@ export interface MapCreateInput {
 }
 
 export interface MapUpdateInput {
-	name?: string;
+	mapName?: string;
 	description?: string;
 	version?: string;
 }

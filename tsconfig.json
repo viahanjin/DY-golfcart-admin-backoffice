@@ -11,7 +11,8 @@
 		"noEmit": true,
 		"noImplicitAny": true, //any타입 금지 여부
 		"strictNullChecks": true, //null, undefined 타입에 이상한 짓 할시 에러내기
-		"strictPropertyInitialization": true, //class constructor 작성시 타입체크 강하게
+		"strictPropertyInitialization": false, //class constructor 작성시 타입체크 강하게
+		"exactOptionalPropertyTypes": false, //옵션 속성 타입 체크 완화
 		"noImplicitThis": true, //this 키워드가 any 타입일 경우 에러내기
 		"alwaysStrict": true, //자바스크립트 "use strict" 모드 켜기
 		"noUnusedLocals": false, //쓰지않는 지역변수 있으면 에러내기

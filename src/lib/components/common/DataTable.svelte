@@ -38,14 +38,38 @@
 	}>();
 
 	// --- DERIVED STATE ---
-	$: allSelected = items.length > 0 && selectedItems.size === items.filter(it => it[idKey]).length;
+	$: allSelected =
+		items.length > 0 && selectedItems.size === items.filter((it) => it[idKey]).length;
 	$: fromItem = (page - 1) * itemsPerPage + 1;
 	$: toItem = Math.min(page * itemsPerPage, totalItems);
 
 	// --- HELPERS ---
 	// Safely access nested properties like 'address.city'
 	function get(obj: any, path: string): any {
-		return path.split('.').reduce((o, i) => (o ? o[i] : undefined), obj);
+		const value = path.split('.').reduce((o, i) => (o ? o[i] : undefined), obj);
+
+		// Special formatting for address objects
+		if (path === 'address' && value && typeof value === 'object') {
+			// Format address object as string
+			const parts = [];
+			if (value.address1) parts.push(value.address1);
+			if (value.address2) parts.push(value.address2);
+			return parts.join(' ') || '-';
+		}
+
+		// Handle other objects by converting to string
+		if (value && typeof value === 'object') {
+			return JSON.stringify(value);
+		}
+
+		return value ?? '-';
+	}
+
+	// Helper function to truncate long text
+	function truncateText(text: string, maxLength: number = 40): string {
+		if (!text) return '-';
+		if (text.length <= maxLength) return text;
+		return text.substring(0, maxLength) + '...';
 	}
 </script>
 
@@ -70,7 +94,7 @@
 					<tr>
 						{#each columns as column}
 							<th
-								class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 {column.class ||
+								class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400 {column.class ||
 									''}"
 							>
 								{#if column.key === 'select'}
@@ -108,7 +132,7 @@
 					{#each items as item (item[idKey])}
 						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
 							{#each columns as column (column.key)}
-								<td class="whitespace-nowrap px-4 py-3 text-sm {column.class || ''}">
+								<td class="px-4 py-3 text-sm whitespace-nowrap {column.class || ''}">
 									{#if column.key === 'select'}
 										<button
 											on:click={() => dispatch('select', item[idKey])}
@@ -138,10 +162,55 @@
 										<slot name="cell-mapName" {item} />
 									{:else if column.key === 'version' && $$slots['cell-version']}
 										<slot name="cell-version" {item} />
+									{:else if column.key === 'address' && $$slots['cell-address']}
+										<slot name="cell-address" {item} />
+									{:else if column.key === 'golfCourseName' && $$slots['cell-golfCourseName']}
+										<slot name="cell-golfCourseName" {item} />
+									{:else if column.key === 'connectedGolfCourseId' && $$slots['cell-connectedGolfCourseId']}
+										<slot name="cell-connectedGolfCourseId" {item} />
+									{:else if column.key === 'batteryLevel' && $$slots['cell-batteryLevel']}
+										<slot name="cell-batteryLevel" {item} />
+									{:else if column.key === 'maintenanceStatus' && $$slots['cell-maintenanceStatus']}
+										<slot name="cell-maintenanceStatus" {item} />
+									{:else if column.key === 'createdAt' && $$slots['cell-createdAt']}
+										<slot name="cell-createdAt" {item} />
+									{:else if column.key === 'specs.maxSpeed' && $$slots['cell-specs.maxSpeed']}
+										<slot name="cell-specs.maxSpeed" {item} />
+									{:else if column.key === 'specs' && $$slots['cell-specs']}
+										<slot name="cell-specs" {item} />
+									{:else if column.key === 'totalCarts' && $$slots['cell-totalCarts']}
+										<slot name="cell-totalCarts" {item} />
+									{:else if column.key === 'mapStatus' && $$slots['cell-mapStatus']}
+										<slot name="cell-mapStatus" {item} />
+									{:else if column.key === 'mapData' && $$slots['cell-mapData']}
+										<slot name="cell-mapData" {item} />
+									{:else if column.key === 'address'}
+										{@const addressValue = get(item, String(column.key))}
+										<div class="group relative">
+											<span
+												class="block truncate text-gray-900 dark:text-gray-200 cursor-help"
+												title={addressValue}
+											>
+												{addressValue}
+											</span>
+											{#if addressValue && addressValue !== '-' && addressValue.length > 25}
+												<div class="pointer-events-none absolute left-0 bottom-full z-[100] mb-2 hidden min-w-[200px] max-w-xs rounded-md bg-gray-900 px-3 py-2 text-xs text-white shadow-lg group-hover:block dark:bg-gray-700">
+													{addressValue}
+													<div class="absolute -bottom-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"></div>
+												</div>
+											{/if}
+										</div>
 									{:else}
-										<span class="text-gray-900 dark:text-gray-200">
-											{get(item, String(column.key))}
-										</span>
+										{@const cellValue = get(item, String(column.key))}
+										{#if typeof cellValue === 'string' && cellValue.length > 40}
+											<span class="text-gray-900 dark:text-gray-200" title={cellValue}>
+												{truncateText(cellValue)}
+											</span>
+										{:else}
+											<span class="text-gray-900 dark:text-gray-200">
+												{cellValue}
+											</span>
+										{/if}
 									{/if}
 								</td>
 							{/each}

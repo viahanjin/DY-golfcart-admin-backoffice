@@ -4,7 +4,7 @@ import type {
   PointCoordinates,
   LineStringCoordinates,
   PolygonCoordinates,
-} from "../../types/map";
+} from "$lib/types/map";
 import type { Coordinate } from "../../types/protocol";
 import { calculateBounds } from "./boundsCalculator";
 

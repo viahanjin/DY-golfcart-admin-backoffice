@@ -1,18 +1,35 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
 	import Header from '../../lib/components/layout/Header.svelte';
 	import Sidebar from '../../lib/components/layout/Sidebar.svelte';
+	import { authStore } from '$lib/stores/auth.store';
 
 	// 사이드바 열림/닫힘 상태
 	let sidebarOpen = true;
 
-	// 현재 사용자 정보 (임시 - 나중에 실제 데이터로 교체)
-	let user = {
-		name: '관리자',
-		email: 'admin@dy.com',
-		role: '시스템 관리자'
-	};
+	// 인증 상태
+	$: authState = $authStore;
+	$: user = authState.user || { name: '', email: '', role: '' };
+
 	console.log('$page.url.pathname', $page.url.pathname);
+
+	// 초기화 완료 플래그
+	let initComplete = false;
+
+	// 인증 확인 및 초기화
+	onMount(async () => {
+		await authStore.init();
+		initComplete = true;
+	});
+
+	// 인증 상태 변화 감지 (초기화 완료 후에만 실행)
+	$: if (browser && initComplete && !authState.isLoading && !authState.isAuthenticated) {
+		goto('/login');
+	}
+
 	// 사이드바 토글 함수
 	const toggleSidebar = () => {
 		sidebarOpen = !sidebarOpen;

@@ -1,4 +1,4 @@
-import type { CourseJsonData, GolfCourseMapData } from "../../types/map";
+import type { CourseJsonData, GolfCourseMapData } from "$lib/types/map";
 import { isGeoJsonData } from "../loaders/fileLoader";
 import { transformGeoJsonToCourseData } from "./geoJsonTransformer";
 

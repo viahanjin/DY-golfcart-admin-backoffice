@@ -48,17 +48,17 @@ function createCartStore() {
 			sortOrder = 'asc'
 		} = params;
 
-		let filtered: Cart[] = [...mockCarts];
+		let filtered: Cart[] = [...(mockCarts as any)];
 
 		if (status !== 'all') {
-			filtered = filtered.filter(c => c.cartStatus.currentState === status);
+			filtered = filtered.filter(c => (c as any).cartStatus?.currentState === status);
 		}
 
 		if (search) {
 			const lowerSearch = search.toLowerCase();
 			filtered = filtered.filter(c =>
 				c.id.toLowerCase().includes(lowerSearch) ||
-				c.cartName.toLowerCase().includes(lowerSearch)
+				(c as any).cartName?.toLowerCase().includes(lowerSearch)
 			);
 		}
 

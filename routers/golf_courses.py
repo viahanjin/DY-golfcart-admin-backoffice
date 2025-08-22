@@ -1,14 +1,19 @@
 from fastapi import APIRouter
 from typing import Optional, Dict, Any
 from datetime import datetime
+import json
+import os
 
 router = APIRouter(
     prefix="/golf-courses",
     tags=["Golf Courses"],
 )
 
-# 샘플 데이터 - 프론트엔드 타입에 맞는 형식
-sample_golf_courses = [
+# 데이터 파일 경로
+DATA_FILE = 'golf_courses_data.json'
+
+# 초기 샘플 데이터 - 프론트엔드 타입에 맞는 형식
+initial_golf_courses = [
     {
         "id": "GC-001",
         "courseName": "그린필드 골프클럽",
@@ -112,6 +117,32 @@ sample_golf_courses = [
     }
 ]
 
+# 데이터 로드/저장 함수들
+def load_golf_courses():
+    """파일에서 골프장 데이터 로드"""
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            print(f"⚠️ {DATA_FILE} 파일 읽기 실패, 초기 데이터로 복원")
+    
+    # 파일이 없거나 읽기 실패 시 초기 데이터 생성
+    save_golf_courses(initial_golf_courses)
+    return initial_golf_courses
+
+def save_golf_courses(courses):
+    """파일에 골프장 데이터 저장"""
+    try:
+        with open(DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(courses, f, ensure_ascii=False, indent=2)
+        print(f"💾 골프장 데이터를 {DATA_FILE}에 저장했습니다.")
+    except IOError as e:
+        print(f"❌ 데이터 저장 실패: {e}")
+
+# 전역 데이터 (서버 시작시 로드)
+sample_golf_courses = load_golf_courses()
+
 @router.get("")
 async def get_golf_courses(page: int = 1, limit: int = 20, search: Optional[str] = None, status: Optional[str] = None, sortBy: Optional[str] = None, sortOrder: Optional[str] = None):
     # 필터링 로직
@@ -212,8 +243,9 @@ async def create_golf_course(body: Dict[Any, Any]):
         "createdAt": datetime.now().isoformat() + "Z"
     }
     
-    # 실제로는 데이터베이스에 저장
+    # 메모리와 파일에 저장
     sample_golf_courses.append(new_course)
+    save_golf_courses(sample_golf_courses)
     
     return {
         "success": True,
@@ -290,6 +322,7 @@ async def update_golf_course(id: str, body: Dict[Any, Any]):
             updated_course["lastModified"] = datetime.now().isoformat() + "Z"
             
             sample_golf_courses[i] = updated_course
+            save_golf_courses(sample_golf_courses)
             
             return {
                 "success": True,
@@ -311,6 +344,7 @@ async def delete_golf_course(id: str):
     for i, course in enumerate(sample_golf_courses):
         if course["id"] == id:
             sample_golf_courses.pop(i)
+            save_golf_courses(sample_golf_courses)
             return {
                 "success": True,
                 "message": "골프장이 삭제되었습니다."
@@ -335,6 +369,8 @@ async def bulk_delete_golf_courses(body: Dict[str, list]):
             sample_golf_courses.pop(i)
             deleted_count += 1
     
+    save_golf_courses(sample_golf_courses)
+    
     return {
         "success": True,
         "message": f"{deleted_count}개의 골프장이 삭제되었습니다."
@@ -348,6 +384,7 @@ async def update_golf_course_status(id: str, body: Dict[str, str]):
         if course["id"] == id:
             sample_golf_courses[i]["status"] = status
             sample_golf_courses[i]["lastModified"] = datetime.now().isoformat() + "Z"
+            save_golf_courses(sample_golf_courses)
             
             return {
                 "success": True,

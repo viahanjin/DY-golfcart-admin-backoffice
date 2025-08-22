@@ -4,7 +4,7 @@ import type {
   CoursePolygon,
   SegmentCourse,
   ParsedCourseData,
-} from "../../types/map";
+} from "$lib/types/map";
 
 /**
  * json 데이터를 id 값을 key 값으로 하고 나머지를 value로 저장하는 함수

@@ -5,21 +5,22 @@
 
 import { apiConfig } from '$lib/config/api.config';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
 	success: boolean;
 	data?: T;
 	error?: ApiError;
 	message?: string;
+	url?: unknown;
 }
 
 export interface ApiError {
 	code: string;
 	message: string;
-	details?: any;
+	details?: unknown;
 }
 
 export interface RequestOptions extends RequestInit {
-	params?: Record<string, any>;
+	params?: Record<string, string | number | boolean>;
 	timeout?: number;
 }
 
@@ -34,9 +35,10 @@ class ApiService {
 		options: RequestOptions = {}
 	): Promise<ApiResponse<T>> {
 		const { params, timeout = apiConfig.timeout, ...fetchOptions } = options;
-		
-		// URL 생성
-		const url = new URL(`${apiConfig.baseURL}${endpoint}`);
+
+		// URL 생성 - API prefix 자동 추가
+		const apiEndpoint = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+		const url = new URL(`${apiConfig.baseURL}${apiEndpoint}`);
 		if (params) {
 			Object.entries(params).forEach(([key, value]) => {
 				if (value !== undefined && value !== null) {
@@ -82,20 +84,20 @@ class ApiService {
 
 			// 응답 처리
 			if (!response.ok) {
-				return await this.handleErrorResponse(response);
+				return await this.handleErrorResponse<T>(response);
 			}
 
 			const data = await response.json();
 			return {
 				success: true,
 				data: data.data || data,
-				message: data.message
+				message: data.message,
+				url: data.url
 			};
-
 		} catch (error) {
 			clearTimeout(timeoutId);
 			this.abortControllers.delete(requestKey);
-			
+
 			if (error instanceof Error) {
 				if (error.name === 'AbortError') {
 					return {
@@ -106,7 +108,7 @@ class ApiService {
 						}
 					};
 				}
-				
+
 				return {
 					success: false,
 					error: {
@@ -129,10 +131,10 @@ class ApiService {
 	/**
 	 * 에러 응답 처리
 	 */
-	private async handleErrorResponse(response: Response): Promise<ApiResponse> {
+	private async handleErrorResponse<T>(response: Response): Promise<ApiResponse<T>> {
 		try {
 			const errorData = await response.json();
-			
+
 			// 401 Unauthorized - 토큰 만료 또는 인증 실패
 			if (response.status === 401) {
 				this.clearAuthToken();
@@ -187,34 +189,42 @@ class ApiService {
 	 */
 	private getAuthToken(): string | null {
 		if (typeof window !== 'undefined') {
-			return localStorage.getItem('auth_token');
+			return localStorage.getItem('accessToken');
 		}
 		return null;
 	}
 
 	private setAuthToken(token: string): void {
 		if (typeof window !== 'undefined') {
-			localStorage.setItem('auth_token', token);
+			localStorage.setItem('accessToken', token);
 		}
 	}
 
 	private clearAuthToken(): void {
 		if (typeof window !== 'undefined') {
-			localStorage.removeItem('auth_token');
+			localStorage.removeItem('accessToken');
+			localStorage.removeItem('refreshToken');
 		}
 	}
 
 	/**
 	 * HTTP 메서드별 함수
 	 */
-	async get<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+	async get<T>(
+		endpoint: string,
+		params?: Record<string, string | number | boolean>
+	): Promise<ApiResponse<T>> {
 		return this.request<T>(endpoint, {
 			method: 'GET',
 			params
 		});
 	}
 
-	async post<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<ApiResponse<T>> {
+	async post<T>(
+		endpoint: string,
+		data?: unknown,
+		options?: RequestOptions
+	): Promise<ApiResponse<T>> {
 		return this.request<T>(endpoint, {
 			...options,
 			method: 'POST',
@@ -222,7 +232,11 @@ class ApiService {
 		});
 	}
 
-	async put<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<ApiResponse<T>> {
+	async put<T>(
+		endpoint: string,
+		data?: unknown,
+		options?: RequestOptions
+	): Promise<ApiResponse<T>> {
 		return this.request<T>(endpoint, {
 			...options,
 			method: 'PUT',
@@ -230,7 +244,11 @@ class ApiService {
 		});
 	}
 
-	async patch<T>(endpoint: string, data?: any, options?: RequestOptions): Promise<ApiResponse<T>> {
+	async patch<T>(
+		endpoint: string,
+		data?: unknown,
+		options?: RequestOptions
+	): Promise<ApiResponse<T>> {
 		return this.request<T>(endpoint, {
 			...options,
 			method: 'PATCH',
@@ -248,10 +266,14 @@ class ApiService {
 	/**
 	 * 파일 업로드
 	 */
-	async upload<T>(endpoint: string, file: File, additionalData?: Record<string, any>): Promise<ApiResponse<T>> {
+	async upload<T>(
+		endpoint: string,
+		file: File,
+		additionalData?: Record<string, string>
+	): Promise<ApiResponse<T>> {
 		const formData = new FormData();
 		formData.append('file', file);
-		
+
 		if (additionalData) {
 			Object.entries(additionalData).forEach(([key, value]) => {
 				formData.append(key, value);
@@ -274,7 +296,7 @@ class ApiService {
 	 * 모든 진행 중인 요청 취소
 	 */
 	cancelAllRequests(): void {
-		this.abortControllers.forEach(controller => controller.abort());
+		this.abortControllers.forEach((controller) => controller.abort());
 		this.abortControllers.clear();
 	}
 }

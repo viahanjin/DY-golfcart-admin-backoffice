@@ -8,7 +8,7 @@ import type {
   PointFeature,
   AreaFeature,
   PointCoordinates,
-} from "../../types/map";
+} from "$lib/types/map";
 
 /**
  * GeoJSON FeatureCollection을 기존 CourseJsonData 구조로 변환

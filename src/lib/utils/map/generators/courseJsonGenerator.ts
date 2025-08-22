@@ -3,7 +3,7 @@ import type {
   CoursePoint,
   CoursePolygon,
   SegmentCourse,
-} from "../../types/map";
+} from "$lib/types/map";
 import { extractJointSegments } from "../navigation/jointExtractor";
 
 /**

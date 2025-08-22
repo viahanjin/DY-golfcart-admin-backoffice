@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import auth, golf_courses, carts, maps, address, users
+from routers import cart_models
 
 app = FastAPI(
     title="Golf Cart Management API Mock Server",
@@ -22,6 +23,9 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api")
 app.include_router(golf_courses.router, prefix="/api")
 app.include_router(carts.router, prefix="/api")
+app.include_router(cart_models.router, prefix="/api")
+print(f"🚗 Cart models router included with routes: {[route.path for route in cart_models.router.routes]}")
+# 골프장 카트 API는 carts 라우터에 통합됨
 app.include_router(maps.router, prefix="/api")
 app.include_router(address.router, prefix="/api")
 app.include_router(users.router, prefix="/api")

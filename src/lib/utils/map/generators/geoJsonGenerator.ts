@@ -11,7 +11,7 @@ import type {
   AreaFeature,
   PointCoordinates,
   LineStringCoordinates,
-} from "../../types/map";
+} from "$lib/types/map";
 
 /**
  * 맵 에디터 데이터를 GeoJSON 형식으로 변환 (선형 노드 연결 구조)

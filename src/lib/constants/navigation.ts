@@ -3,15 +3,16 @@ import {
 	Building2,
 	List,
 	Map,
-	Car,
+	// Car,
 	// Briefcase,
 	// FileText,
-	Radio,
+	// Radio,
 	// Wrench,
 	// TrendingUp,
-	Upload
+	Upload,
+	Settings,
+	Package
 	// Users,
-	// Settings,
 	// AlertCircle,
 	// DollarSign
 } from 'lucide-svelte';
@@ -91,29 +92,51 @@ export const MENU_ITEMS: NavMenuItem[] = [
 	// 	section: '비즈니스 관리'
 	// },
 
-	// 제품 관리
+	// 카트 관리
 	{
-		id: 'cart-delivery',
-		label: '납품 카트 관리',
-		icon: Car,
-		section: '제품 관리',
+		id: 'product-management',
+		label: '카트 관리',
+		icon: Package,
+		section: '카트 관리',
 		children: [
 			{
-				id: 'delivered-carts',
-				label: '납품 카트 현황',
-				icon: List,
-				path: '/dashboard/carts',
-				description: '고객사별 납품된 카트 관리'
+				id: 'cart-models',
+				label: '카트 모델',
+				icon: Settings,
+				path: '/dashboard/cart-models',
+				description: '카트 모델 등록 및 관리'
 			},
 			{
-				id: 'cart-monitoring',
-				label: '실시간 모니터링',
-				icon: Radio,
-				path: '/dashboard/monitoring',
-				description: '카트 실시간 상태 모니터링'
+				id: 'cart-inventory',
+				label: '카트 재고',
+				icon: List,
+				path: '/dashboard/cart-inventory',
+				description: '카트 재고 및 배치 관리'
 			}
 		]
 	},
+	// {
+	// 	id: 'cart-delivery',
+	// 	label: '납품 카트 관리',
+	// 	icon: Car,
+	// 	section: '제품 관리',
+	// 	children: [
+	// 		{
+	// 			id: 'delivered-carts',
+	// 			label: '납품 카트 현황',
+	// 			icon: List,
+	// 			path: '/dashboard/carts',
+	// 			description: '고객사별 납품된 카트 관리'
+	// 		},
+	// 		{
+	// 			id: 'cart-monitoring',
+	// 			label: '실시간 모니터링',
+	// 			icon: Radio,
+	// 			path: '/dashboard/monitoring',
+	// 			description: '카트 실시간 상태 모니터링'
+	// 		}
+	// 	]
+	// },
 	// {
 	// 	id: 'maintenance-management',
 	// 	label: 'A/S 관리',
@@ -191,7 +214,7 @@ export const MENU_ITEMS: NavMenuItem[] = [
 // 섹션별로 메뉴 아이템들을 그룹화
 export const MENU_SECTIONS = [
 	'비즈니스 관리',
-	'제품 관리',
+	'카트 관리',
 	'기술 서비스'
 	// '설정'
 ];

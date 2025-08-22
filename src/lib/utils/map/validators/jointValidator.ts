@@ -2,7 +2,7 @@ import type {
   GolfCourseMapData,
   NodeFeature,
   RouteFeature,
-} from "../../types/map";
+} from "$lib/types/map";
 
 /**
  * Joint 연결 구조 검증 함수

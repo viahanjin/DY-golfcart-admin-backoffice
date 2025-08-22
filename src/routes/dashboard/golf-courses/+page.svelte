@@ -61,12 +61,12 @@
 
 	const columns: ColumnDefinition<GolfCourse>[] = [
 		{ key: 'select', label: 'Select', class: 'w-12' },
-		{ key: 'courseName', label: '골프장명', sortable: true },
-		{ key: 'courseCode', label: '코드', sortable: true },
-		{ key: 'address', label: '주소' },
-		{ key: 'totalCarts', label: '카트 수', sortable: true, class: 'text-center' },
-		{ key: 'status', label: '상태', sortable: true, class: 'text-center' },
-		{ key: 'lastModified', label: '최종 수정', sortable: true },
+		{ key: 'courseName', label: '골프장명', sortable: true, class: 'min-w-[120px]' },
+		{ key: 'courseCode', label: '코드', sortable: true, class: 'w-24' },
+		{ key: 'address', label: '주소', class: 'min-w-[150px] max-w-[200px]' },
+		{ key: 'totalCarts', label: '카트', sortable: true, class: 'w-20 text-center' },
+		{ key: 'status', label: '상태', sortable: true, class: 'w-24 text-center' },
+		{ key: 'lastModified', label: '최종 수정', sortable: true, class: 'w-32' },
 		{ key: 'actions', label: '액션', class: 'w-24 text-center' }
 	];
 
@@ -227,6 +227,42 @@
 			<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
 				{status.text}
 			</span>
+		</svelte:fragment>
+
+		<svelte:fragment slot="cell-address" let:item>
+			{#if item.address && typeof item.address === 'object'}
+				{@const fullAddress = `${item.address.address1 || ''} ${item.address.address2 || ''}`.trim()}
+				<div class="group relative">
+					<span 
+						class="block truncate text-gray-900 dark:text-gray-200 cursor-help" 
+						title={fullAddress}
+					>
+						{fullAddress || '-'}
+					</span>
+					{#if fullAddress && fullAddress.length > 25}
+						<div class="pointer-events-none absolute left-0 bottom-full z-[100] mb-2 hidden min-w-[200px] max-w-xs rounded-md bg-gray-900 px-3 py-2 text-xs text-white shadow-lg group-hover:block dark:bg-gray-700">
+							{fullAddress}
+							<div class="absolute -bottom-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"></div>
+						</div>
+					{/if}
+				</div>
+			{:else if item.address}
+				<div class="group relative">
+					<span 
+						class="block truncate text-gray-900 dark:text-gray-200" 
+					>
+						{item.address}
+					</span>
+					{#if item.address.length > 30}
+						<div class="absolute left-0 top-full z-50 mt-1 hidden w-max max-w-xs rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg group-hover:block dark:bg-gray-700">
+							{item.address}
+							<div class="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"></div>
+						</div>
+					{/if}
+				</div>
+			{:else}
+				<span class="text-gray-900 dark:text-gray-200">-</span>
+			{/if}
 		</svelte:fragment>
 
 		<svelte:fragment slot="cell-lastModified" let:item>

@@ -4,6 +4,8 @@
 	import { goto } from '$app/navigation';
 	import myLogo from '$lib/assets/logo.svg';
 	import { Eye, EyeOff, LogIn } from 'lucide-svelte';
+	import { authStore } from '$lib/stores/auth.store';
+	import { onMount } from 'svelte';
 
 	// 상수 정의
 	const MIN_PASSWORD_LENGTH = 6;
@@ -24,14 +26,24 @@
 		password: ''
 	};
 
-	// 서버에서 온 에러 (페이지 데이터에서 가져옴)
-	$: serverError = $page.form?.error || '';
+	// 인증 스토어 상태
+	$: authState = $authStore;
+	
+	// 에러 메시지 관리
+	let serverError = '';
 	$: serverEmail = $page.form?.email || '';
 
 	// 서버에서 이메일 값이 있으면 폼에 반영
 	$: if (serverEmail && !formData.user_id) {
 		formData.user_id = serverEmail;
 	}
+
+	// 이미 로그인된 경우 대시보드로 리다이렉트
+	onMount(() => {
+		if (authState.isAuthenticated) {
+			goto('/dashboard');
+		}
+	});
 
 	// 클라이언트 밸리데이션 함수들
 	const validateEmail = (email: string): string => {
@@ -55,14 +67,30 @@
 	$: if (emailTouched) clientErrors.user_id = validateEmail(formData.user_id);
 	$: if (passwordTouched) clientErrors.password = validatePassword(formData.password);
 
-	// 폼 제출 가능 여부
+	// 폼 제출 가능 여부 (인증 스토어의 로딩 상태도 고려)
 	$: isFormValid =
 		!!formData.user_id && !!formData.password && !clientErrors.user_id && !clientErrors.password;
+	$: isFormLoading = isLoading || authState.isLoading;
+
+	// API 로그인 처리
+	const handleApiLogin = async () => {
+		if (!isFormValid || isFormLoading) return;
+		
+		isLoading = true;
+		const result = await authStore.login(formData.user_id, formData.password);
+		
+		if (result.success) {
+			goto('/dashboard');
+		} else {
+			serverError = result.error || '로그인에 실패했습니다.';
+		}
+		isLoading = false;
+	};
 
 	// 엔터키 처리
 	const handleKeydown = (event: KeyboardEvent): void => {
-		if (event.key === 'Enter' && isFormValid && !isLoading) {
-			formElement.requestSubmit();
+		if (event.key === 'Enter' && isFormValid && !isFormLoading) {
+			handleApiLogin();
 		}
 	};
 
@@ -232,11 +260,12 @@
 
 				<!-- 로그인 버튼 - 관제시스템 스타일 -->
 				<button
-					type="submit"
-					disabled={!isFormValid || isLoading}
+					type="button"
+					on:click={handleApiLogin}
+					disabled={!isFormValid || isFormLoading}
 					class="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-500/30 bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-sm font-medium text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-none disabled:cursor-not-allowed disabled:border-gray-600 disabled:from-gray-600 disabled:to-gray-700"
 				>
-					{#if isLoading}
+					{#if isFormLoading}
 						<div
 							class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
 							aria-hidden="true"

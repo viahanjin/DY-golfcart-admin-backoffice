@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { Menu, Bell, Settings, User, LogOut, ChevronDown } from 'lucide-svelte';
 	import myLogo from '$lib/assets/logo.svg';
+	import { authStore } from '$lib/stores/auth.store';
 
 	export let user: {
 		name: string;
@@ -28,8 +29,8 @@
 	};
 
 	// 로그아웃
-	const handleLogout = () => {
-		goto('/login');
+	const handleLogout = async () => {
+		await authStore.logout();
 	};
 
 	// 사용자 메뉴 토글

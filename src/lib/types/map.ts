@@ -2,6 +2,7 @@ export interface MapData {
 	mapId: string;
 	mapName: string;
 	connectedGolfCourseId: string;
+	golfCourseName?: string;
 	version: string;
 	createdAt: string;
 	updatedAt: string;

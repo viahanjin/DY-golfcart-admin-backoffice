@@ -1,4 +1,4 @@
-import type { CourseJsonData, GolfCourseMapData } from "../../types/map";
+import type { CourseJsonData, GolfCourseMapData } from "$lib/types/map";
 
 /**
  * 지정된 경로의 JSON 데이터 로드 함수

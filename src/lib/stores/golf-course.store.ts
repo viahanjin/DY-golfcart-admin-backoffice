@@ -6,7 +6,6 @@ import { writable, derived } from 'svelte/store';
 import { golfCourseService, type GolfCourseListParams } from '$lib/services/golf-course.service';
 import type { GolfCourse, GolfCourseCreateInput, GolfCourseUpdateInput } from '$lib/types/golf-course';
 import type { ApiError } from '$lib/services/api.service';
-import mockGolfCourses from '$lib/mock/golf-courses.json';
 
 // 스토어 상태 타입
 interface GolfCourseState {
@@ -52,107 +51,41 @@ function createGolfCourseStore() {
 			const response = await golfCourseService.getList(params);
 
 			if (response.success && response.data) {
+				const data = response.data;
 				update(state => ({
 					...state,
-					items: response.data.items,
-					total: response.data.total,
-					page: response.data.page,
-					limit: response.data.limit,
-					totalPages: response.data.totalPages,
-					loading: false
+					items: data.items,
+					total: data.total,
+					page: data.page,
+					limit: data.limit,
+					totalPages: data.totalPages,
+					loading: false,
+					error: null
 				}));
 			} else {
-				// API 실패시 mock 데이터 사용
-				loadMockData(params);
+				console.warn('API 응답이 실패했습니다:', response.error);
+				update(state => ({
+					...state,
+					loading: false,
+					error: response.error || {
+						code: 'API_ERROR',
+						message: 'API 서버에서 데이터를 가져올 수 없습니다.'
+					}
+				}));
 			}
 		} catch (error) {
-			// 네트워크 오류 등으로 API 호출 자체가 실패한 경우 mock 데이터 사용
-			console.warn('API 호출 실패, mock 데이터를 사용합니다:', error);
-			loadMockData(params);
+			console.error('API 호출 자체가 실패했습니다:', error);
+			update(state => ({
+				...state,
+				loading: false,
+				error: {
+					code: 'NETWORK_ERROR',
+					message: 'API 서버에 연결할 수 없습니다. 네트워크를 확인해주세요.'
+				}
+			}));
 		}
 	}
 
-	// Mock 데이터 로드 함수
-	function loadMockData(params?: GolfCourseListParams) {
-		const currentState = get(golfCourseStore);
-		let filteredItems = [...mockGolfCourses] as GolfCourse[];
-
-		// 상태 필터링
-		if (params?.status && params.status !== 'all') {
-			filteredItems = filteredItems.filter(item => item.status === params.status);
-		}
-
-		// 검색 필터링
-		if (params?.search) {
-			const searchLower = params.search.toLowerCase();
-			filteredItems = filteredItems.filter(item =>
-				item.courseName.toLowerCase().includes(searchLower) ||
-				item.courseCode.toLowerCase().includes(searchLower) ||
-				item.address.address1.toLowerCase().includes(searchLower)
-			);
-		}
-
-		// 정렬
-		if (params?.sortBy) {
-			filteredItems.sort((a, b) => {
-				let aValue: any, bValue: any;
-				
-				switch (params.sortBy) {
-					case 'courseName':
-						aValue = a.courseName;
-						bValue = b.courseName;
-						break;
-					case 'courseCode':
-						aValue = a.courseCode;
-						bValue = b.courseCode;
-						break;
-					case 'totalCarts':
-						aValue = a.totalCarts;
-						bValue = b.totalCarts;
-						break;
-					case 'status':
-						aValue = a.status;
-						bValue = b.status;
-						break;
-					case 'lastModified':
-						aValue = new Date(a.lastModified);
-						bValue = new Date(b.lastModified);
-						break;
-					default:
-						aValue = a.createdAt;
-						bValue = b.createdAt;
-				}
-
-				if (params.sortOrder === 'desc') {
-					return aValue < bValue ? 1 : -1;
-				}
-				return aValue > bValue ? 1 : -1;
-			});
-		}
-
-		// 페이지네이션
-		const page = params?.page || currentState.page;
-		const limit = params?.limit || currentState.limit;
-		const total = filteredItems.length;
-		const totalPages = Math.ceil(total / limit);
-		const startIndex = (page - 1) * limit;
-		const endIndex = startIndex + limit;
-		const paginatedItems = filteredItems.slice(startIndex, endIndex);
-
-		update(state => ({
-			...state,
-			items: paginatedItems,
-			total,
-			page,
-			limit,
-			totalPages,
-			loading: false,
-			error: {
-				code: 'API_FALLBACK',
-				message: 'API 서버에 연결할 수 없어 로컬 데이터를 표시합니다.'
-			}
-		}));
-	}
 
 	// 페이지 변경
 	async function changePage(page: number) {

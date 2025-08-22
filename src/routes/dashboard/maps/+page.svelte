@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { mapStore, isLoading, errorMessage, selectedCount } from '$lib/stores/map.store';
+	import { golfCourseStore } from '$lib/stores/golf-course.store';
 	import type { MapData } from '$lib/types/map';
+	import type { GolfCourse } from '$lib/types/golf-course';
 	import type { StatItem } from '$lib/components/common/StatsCards.svelte';
 	import type { ColumnDefinition } from '$lib/components/common/DataTable.svelte';
 
@@ -49,9 +51,18 @@
 	let showDeleteDialog = false;
 	let showBulkDeleteDialog = false;
 
+	// Golf course data for filtering
+	let golfCourseStoreState: any;
+	const unsubscribeGolfCourseStore = golfCourseStore.subscribe((value) => {
+		golfCourseStoreState = value;
+	});
+
+	let selectedGolfCourseId: string = 'all';
+
 	// --- Lifecycle ---
 	onMount(() => {
 		mapStore.loadMaps();
+		golfCourseStore.loadGolfCourses(); // 골프장 목록도 로드
 	});
 
 	onDestroy(() => {
@@ -59,6 +70,7 @@
 		unsubscribeLoading();
 		unsubscribeError();
 		unsubscribeSelected();
+		unsubscribeGolfCourseStore();
 	});
 
 	// --- Component Props ---
@@ -91,11 +103,11 @@
 	const columns: ColumnDefinition<MapData>[] = [
 		{ key: 'select', label: 'Select', class: 'w-12' },
 		{ key: 'mapName', label: '맵 정보', sortable: true },
-		{ key: 'version', label: '버전', sortable: true, class: 'text-center' },
+		{ key: 'version', label: '버전', sortable: true, class: 'w-20 text-center' },
 		{ key: 'connectedGolfCourseId', label: '연결 골프장' },
-		{ key: 'mapStatus', label: '상태', sortable: true, class: 'text-center' },
-		// { key: 'mapStatus.validationStatus', label: '검증', class: 'text-center' },
-		{ key: 'updatedAt', label: '최근 수정', sortable: true },
+		{ key: 'mapStatus', label: '운영 상태', sortable: true, class: 'w-24 text-center' },
+		{ key: 'mapData', label: '검증 상태', class: 'w-24 text-center' },
+		{ key: 'updatedAt', label: '최근 수정', sortable: true, class: 'w-32' },
 		{ key: 'actions', label: '액션', class: 'w-24 text-center' }
 	];
 
@@ -149,6 +161,18 @@
 		showBulkDeleteDialog = false;
 	}
 
+	// 골프장 필터 변경 핸들러
+	function handleGolfCourseFilter(courseId: string) {
+		selectedGolfCourseId = courseId;
+		console.log('골프장 필터 변경:', courseId);
+		// 골프장 ID로 맵 필터링
+		mapStore.loadMaps({
+			...storeState,
+			golfCourseId: courseId,
+			page: 1 // 필터 변경 시 첫 페이지로
+		});
+	}
+
 	// --- Helper Functions ---
 	function getStatusInfo(status: 'active' | 'testing' | 'inactive') {
 		switch (status) {
@@ -182,7 +206,7 @@
 	}
 
 	function getValidationClass(status: 'verified' | 'pending' | 'failed') {
-		const baseClass = 'h-5 w-5';
+		const baseClass = 'h-4 w-4';
 		switch (status) {
 			case 'verified':
 				return `${baseClass} text-green-500`;
@@ -192,6 +216,26 @@
 				return `${baseClass} text-red-500`;
 			default:
 				return baseClass;
+		}
+	}
+
+	function getValidationInfo(status: 'verified' | 'pending' | 'failed') {
+		switch (status) {
+			case 'verified':
+				return {
+					text: '검증완료',
+					textColor: 'text-green-600 dark:text-green-400'
+				};
+			case 'pending':
+				return {
+					text: '검증대기',
+					textColor: 'text-yellow-600 dark:text-yellow-400'
+				};
+			case 'failed':
+				return {
+					text: '검증실패',
+					textColor: 'text-red-600 dark:text-red-400'
+				};
 		}
 	}
 
@@ -251,6 +295,21 @@
 			on:bulkDelete={() => (showBulkDeleteDialog = true)}
 		>
 			<svelte:fragment slot="filters">
+				<!-- 골프장 필터 -->
+				<select
+					bind:value={selectedGolfCourseId}
+					on:change={(e) => handleGolfCourseFilter(e.currentTarget.value)}
+					class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+				>
+					<option value="all">전체 골프장</option>
+					{#if golfCourseStoreState?.items}
+						{#each golfCourseStoreState.items as course}
+							<option value={course.id}>{course.courseName}</option>
+						{/each}
+					{/if}
+				</select>
+
+				<!-- 맵 상태 필터 -->
 				<select
 					value={storeState.selectedStatus}
 					on:change={(e) => mapStore.changeFilter(e.currentTarget.value)}
@@ -303,18 +362,34 @@
 				</span>
 			</svelte:fragment>
 
-			<svelte:fragment slot="cell-mapStatus.status" let:item>
+			<svelte:fragment slot="cell-connectedGolfCourseId" let:item>
+				<span class="text-gray-900 dark:text-gray-200">
+					{#if item.golfCourseName && item.golfCourseName !== item.connectedGolfCourseId}
+						{item.golfCourseName}
+					{:else}
+						{item.connectedGolfCourseId || '-'}
+					{/if}
+				</span>
+			</svelte:fragment>
+
+			<svelte:fragment slot="cell-mapStatus" let:item>
 				{@const status = getStatusInfo(item.mapStatus.status)}
 				<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
 					{status.text}
 				</span>
 			</svelte:fragment>
 
-			<svelte:fragment slot="cell-mapStatus.validationStatus" let:item>
-				<svelte:component
-					this={getValidationIcon(item.mapStatus.validationStatus)}
-					class={getValidationClass(item.mapStatus.validationStatus)}
-				/>
+			<svelte:fragment slot="cell-mapData" let:item>
+				{@const validation = getValidationInfo(item.mapStatus.validationStatus)}
+				<div class="flex items-center justify-center gap-1">
+					<svelte:component
+						this={getValidationIcon(item.mapStatus.validationStatus)}
+						class={getValidationClass(item.mapStatus.validationStatus)}
+					/>
+					<span class="text-xs font-medium {validation.textColor}">
+						{validation.text}
+					</span>
+				</div>
 			</svelte:fragment>
 
 			<svelte:fragment slot="cell-updatedAt" let:item>

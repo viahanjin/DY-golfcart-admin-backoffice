@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from typing import Optional, Dict, Any
+import time
 
 router = APIRouter(
     prefix="/carts",
@@ -193,3 +194,107 @@ async def get_cart_location(id: str):
         "lastUpdate": "2024-01-15T15:00:00Z"
       }
     }
+
+# 골프장별 카트 관리 API
+@router.get("/golf-courses/{golf_course_id}/carts")
+async def get_golf_course_carts(golf_course_id: str, status: Optional[str] = None, modelId: Optional[str] = None):
+    """골프장별 카트 목록 조회"""
+    mock_carts = [
+        {
+            "id": "cart-1",
+            "golfCourseId": golf_course_id,
+            "cartNumber": "CART-001",
+            "serialNumber": "DY-2024-001", 
+            "modelId": "model-1",
+            "modelName": "DY-GOLF-STANDARD",
+            "status": "active",
+            "deployedAt": "2024-01-15",
+            "lastMaintenanceAt": "2024-01-10",
+            "notes": "",
+            "createdAt": "2024-01-15T09:00:00Z",
+            "updatedAt": "2024-01-15T09:00:00Z"
+        },
+        {
+            "id": "cart-2",
+            "golfCourseId": golf_course_id, 
+            "cartNumber": "CART-002",
+            "serialNumber": "DY-2024-002",
+            "modelId": "model-2",
+            "modelName": "DY-GOLF-PREMIUM",
+            "status": "maintenance",
+            "deployedAt": "2024-02-01",
+            "lastMaintenanceAt": "2024-02-15",
+            "notes": "정기점검 중",
+            "createdAt": "2024-02-01T09:00:00Z",
+            "updatedAt": "2024-02-15T14:30:00Z"
+        }
+    ]
+    
+    # 필터링
+    if status and status != 'all':
+        mock_carts = [cart for cart in mock_carts if cart['status'] == status]
+    
+    if modelId:
+        mock_carts = [cart for cart in mock_carts if cart['modelId'] == modelId]
+    
+    return {
+        "success": True,
+        "data": {
+            "items": mock_carts,
+            "total": len(mock_carts),
+            "stats": {
+                "total": 2,
+                "active": 1,
+                "maintenance": 1,
+                "broken": 0,
+                "inactive": 0
+            }
+        }
+    }
+
+@router.post("/golf-courses/{golf_course_id}/carts", status_code=201)
+async def add_cart_to_golf_course(golf_course_id: str, body: Dict[Any, Any]):
+    """골프장에 카트 추가"""
+    new_cart = {
+        "id": f"cart-{int(time.time())}",
+        "golfCourseId": golf_course_id,
+        "cartNumber": body.get("cartNumber"),
+        "serialNumber": body.get("serialNumber"),
+        "modelId": body.get("modelId"),
+        "modelName": "DY-GOLF-STANDARD",
+        "status": "active",
+        "deployedAt": "2024-01-15",
+        "lastMaintenanceAt": None,
+        "notes": body.get("notes", ""),
+        "createdAt": "2024-01-15T09:00:00Z",
+        "updatedAt": "2024-01-15T09:00:00Z"
+    }
+    
+    return {
+        "success": True,
+        "data": new_cart,
+        "message": "카트가 골프장에 추가되었습니다."
+    }
+
+@router.patch("/golf-courses/{golf_course_id}/carts/{cart_id}/status")
+async def update_golf_course_cart_status(golf_course_id: str, cart_id: str, body: Dict[Any, Any]):
+    """골프장별 카트 상태 업데이트"""
+    return {
+        "success": True,
+        "data": {
+            "id": cart_id,
+            "golfCourseId": golf_course_id,
+            "status": body.get("status"),
+            "updatedAt": "2024-01-15T15:00:00Z"
+        },
+        "message": "카트 상태가 업데이트되었습니다."
+    }
+
+@router.delete("/golf-courses/{golf_course_id}/carts/{cart_id}")
+async def remove_cart_from_golf_course(golf_course_id: str, cart_id: str):
+    """골프장에서 카트 제거"""
+    return {
+        "success": True,
+        "message": "카트가 골프장에서 제거되었습니다."
+    }
+

@@ -1,6 +1,6 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get as getStore } from 'svelte/store';
 import type { MapData, MapCreateInput, MapUpdateInput } from '$lib/types/map';
-import mockMaps from '$lib/mock/maps.json';
+import { mapService } from '$lib/services/map.service';
 
 interface MapState {
 	items: MapData[];
@@ -36,73 +36,71 @@ function createMapStore() {
 	const { subscribe, set, update } = writable<MapState>(initialState);
 
 	async function loadMaps(params: any = {}) {
-		update(s => ({ ...s, loading: true }));
+		update(s => ({ ...s, loading: true, error: null }));
 
-		const {
-			page = 1,
-			limit = 20,
-			search = '',
-			status = 'all',
-			sortBy = 'createdAt',
-			sortOrder = 'desc'
-		} = params;
+		const queryParams = {
+			page: params.page || 1,
+			limit: params.limit || 20,
+			search: params.search || '',
+			status: params.status === 'all' ? undefined : params.status,
+			golfCourseId: params.golfCourseId === 'all' ? undefined : params.golfCourseId,
+			sortBy: params.sortBy || 'createdAt',
+			sortOrder: params.sortOrder || 'desc'
+		};
 
-		let filtered: MapData[] = [...mockMaps] as MapData[];
-
-		if (status !== 'all') {
-			filtered = filtered.filter(m => m.mapStatus.status === status);
+		try {
+			const response = await mapService.getList(queryParams);
+			console.log('🔍 Map service response:', response);
+			
+			if (response.success && response.data) {
+				const data = response.data;
+				console.log('📋 Map data items:', data.items);
+				update(s => ({
+					...s,
+					items: data.items as unknown as MapData[],
+					total: data.total,
+					page: data.page,
+					limit: data.limit,
+					totalPages: data.totalPages,
+					loading: false,
+					searchQuery: queryParams.search,
+					selectedStatus: params.status || 'all',
+					sortBy: queryParams.sortBy,
+					sortOrder: queryParams.sortOrder
+				}));
+			} else {
+				console.error('맵 목록 로드 실패:', response.error);
+				update(s => ({
+					...s,
+					loading: false,
+					error: response.error ? { code: response.error.code, message: response.error.message } : { code: 'API_ERROR', message: '맵 목록을 불러올 수 없습니다.' }
+				}));
+			}
+		} catch (error) {
+			console.error('맵 목록 API 호출 실패:', error);
+			update(s => ({
+				...s,
+				loading: false,
+				error: { code: 'NETWORK_ERROR', message: 'API 서버에 연결할 수 없습니다.' }
+			}));
 		}
-
-		if (search) {
-			const lowerSearch = search.toLowerCase();
-			filtered = filtered.filter(m =>
-				m.mapId.toLowerCase().includes(lowerSearch) ||
-				m.mapName.toLowerCase().includes(lowerSearch)
-			);
-		}
-
-		filtered.sort((a, b) => {
-			const aVal = (a as any)[sortBy];
-			const bVal = (b as any)[sortBy];
-			if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-			if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-			return 0;
-		});
-
-		const total = filtered.length;
-		const totalPages = Math.ceil(total / limit);
-		const paginatedItems = filtered.slice((page - 1) * limit, page * limit);
-
-		update(s => ({
-			...s,
-			items: paginatedItems,
-			total,
-			page,
-			limit,
-			totalPages,
-			loading: false,
-			searchQuery: search,
-			selectedStatus: status,
-			sortBy,
-			sortOrder
-		}));
 	}
 
 	async function changePage(page: number) {
-		const currentState = get(mapStore);
+		const currentState = getStore(mapStore);
 		await loadMaps({ ...currentState, page });
 	}
 
 	async function search(query: string) {
-		await loadMaps({ page: 1, search: query, status: get(mapStore).selectedStatus });
+		await loadMaps({ page: 1, search: query, status: getStore(mapStore).selectedStatus });
 	}
 
 	async function changeFilter(status: any) {
-		await loadMaps({ page: 1, search: get(mapStore).searchQuery, status });
+		await loadMaps({ page: 1, search: getStore(mapStore).searchQuery, status });
 	}
 
 	async function changeSort(sortBy: string) {
-		const currentState = get(mapStore);
+		const currentState = getStore(mapStore);
 		const sortOrder = currentState.sortBy === sortBy && currentState.sortOrder === 'asc' ? 'desc' : 'asc';
 		await loadMaps({ ...currentState, sortBy, sortOrder });
 	}
@@ -135,25 +133,116 @@ function createMapStore() {
 
 	// Mock CRUD operations
 	async function createMap(data: MapCreateInput) {
-		console.log("Creating map", data);
-		await loadMaps();
-		return true;
+		try {
+			update(s => ({ ...s, loading: true }));
+			
+			// 타입 맞춤을 위해 데이터 변환
+			const createInput = {
+				name: data.mapName,
+				description: `맵 생성`,
+				golfCourseId: data.connectedGolfCourseId,
+				type: '2D' as const,
+				mapStatus: data.mapStatus,
+				bounds: {
+					north: data.mapData?.originGps?.latitude ? data.mapData.originGps.latitude + 0.01 : 37.51,
+					south: data.mapData?.originGps?.latitude ? data.mapData.originGps.latitude - 0.01 : 37.49,
+					east: data.mapData?.originGps?.longitude ? data.mapData.originGps.longitude + 0.01 : 127.06,
+					west: data.mapData?.originGps?.longitude ? data.mapData.originGps.longitude - 0.01 : 127.04
+				}
+			};
+			
+			const response = await mapService.create(createInput);
+			
+			if (response.success) {
+				await loadMaps();
+				return true;
+			} else {
+				update(s => ({ ...s, error: response.error ? { code: response.error.code, message: response.error.message } : { code: 'API_ERROR', message: '작업에 실패했습니다.' }, loading: false }));
+				return false;
+			}
+		} catch (error) {
+			console.error("Failed to create map:", error);
+			update(s => ({ ...s, error: { code: 'CREATE_ERROR', message: '맵 생성에 실패했습니다.' }, loading: false }));
+			return false;
+		}
 	}
+
 	async function updateMap(id: string, data: MapUpdateInput) {
-		console.log("Updating map", id, data);
-		await loadMaps();
-		return true;
+		try {
+			console.log('🔄 Updating map:', id, data);
+			update(s => ({ ...s, loading: true }));
+			
+			const response = await mapService.update(id, data);
+			console.log('✅ Map update response:', response);
+			
+			if (response.success) {
+				await loadMaps();
+				return true;
+			} else {
+				update(s => ({ ...s, error: response.error ? { code: response.error.code, message: response.error.message } : { code: 'API_ERROR', message: '작업에 실패했습니다.' }, loading: false }));
+				return false;
+			}
+		} catch (error) {
+			console.error("Failed to update map:", error);
+			update(s => ({ ...s, error: { code: 'UPDATE_ERROR', message: '맵 수정에 실패했습니다.' }, loading: false }));
+			return false;
+		}
 	}
+
 	async function deleteMap(id: string) {
-		console.log("Deleting map", id);
-		await loadMaps();
-		return true;
+		try {
+			update(s => ({ ...s, loading: true }));
+			
+			const response = await mapService.delete(id);
+			
+			if (response.success) {
+				await loadMaps();
+				return true;
+			} else {
+				update(s => ({ ...s, error: response.error ? { code: response.error.code, message: response.error.message } : { code: 'API_ERROR', message: '작업에 실패했습니다.' }, loading: false }));
+				return false;
+			}
+		} catch (error) {
+			console.error("Failed to delete map:", error);
+			update(s => ({ ...s, error: { code: 'DELETE_ERROR', message: '맵 삭제에 실패했습니다.' }, loading: false }));
+			return false;
+		}
 	}
+
 	async function bulkDelete() {
-		console.log("Bulk deleting maps", get(mapStore).selectedItems);
-		update(s => ({...s, selectedItems: new Set()}));
-		await loadMaps();
-		return true;
+		try {
+			const currentState = getStore(mapStore);
+			const selectedIds = Array.from(currentState.selectedItems);
+			
+			update(s => ({ ...s, loading: true }));
+			
+			// 각각의 맵을 삭제
+			const deletePromises = selectedIds.map(id => mapService.delete(id));
+			const results = await Promise.all(deletePromises);
+			
+			const hasFailures = results.some(result => !result.success);
+			
+			if (!hasFailures) {
+				update(s => ({ ...s, selectedItems: new Set() }));
+				await loadMaps();
+				return true;
+			} else {
+				update(s => ({ 
+					...s, 
+					error: { code: 'BULK_DELETE_ERROR', message: '일부 맵 삭제에 실패했습니다.' },
+					loading: false 
+				}));
+				return false;
+			}
+		} catch (error) {
+			console.error("Failed to bulk delete maps:", error);
+			update(s => ({ 
+				...s, 
+				error: { code: 'BULK_DELETE_ERROR', message: '선택한 맵들 삭제에 실패했습니다.' },
+				loading: false 
+			}));
+			return false;
+		}
 	}
 
 	return {
@@ -174,12 +263,6 @@ function createMapStore() {
 }
 
 export const mapStore = createMapStore();
-
-function get<T>(store: { subscribe: (fn: (value: T) => void) => () => void }): T {
-	let value: T;
-	store.subscribe((v) => (value = v))();
-	return value!;
-}
 
 export const isLoading = derived(mapStore, $s => $s.loading);
 export const errorMessage = derived(mapStore, $s => $s.error?.message || null);
