@@ -235,118 +235,63 @@
 			</div>
 		{/if}
 
+			<div class="space-y-6">
 		<!-- Stats Cards -->
 		<StatsCards {stats} />
 
-		<!-- 빠른 액션 카드들 -->
-		<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			<button
-				type="button"
-				class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-blue-900/20"
-				on:click={handleCreate}
-			>
-				<div
-					class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50"
-				>
-					<Building2 class="h-6 w-6 text-blue-600 dark:text-blue-400" />
-				</div>
-				<p class="text-sm font-medium text-gray-900 dark:text-white">새 고객사 등록</p>
-			</button>
 
-			<button
-				type="button"
-				class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-green-400 hover:bg-green-50 dark:border-gray-600 dark:hover:border-green-500 dark:hover:bg-green-900/20"
-			>
-				<div
-					class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50"
-				>
-					<Car class="h-6 w-6 text-green-600 dark:text-green-400" />
-				</div>
-				<p class="text-sm font-medium text-gray-900 dark:text-white">카트 납품 등록</p>
-			</button>
-
-			<button
-				type="button"
-				class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-purple-400 hover:bg-purple-50 dark:border-gray-600 dark:hover:border-purple-500 dark:hover:bg-purple-900/20"
-			>
-				<div
-					class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50"
-				>
-					<TrendingUp class="h-6 w-6 text-purple-600 dark:text-purple-400" />
-				</div>
-				<p class="text-sm font-medium text-gray-900 dark:text-white">영업 기회 추가</p>
-			</button>
-		</div>
-
-		<button
-			type="button"
-			class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-yellow-400 hover:bg-yellow-50 dark:border-gray-600 dark:hover:border-yellow-500 dark:hover:bg-yellow-900/20"
-			on:click={handleExport}
+		<!-- Filter Bar -->
+		<FilterBar
+			bind:searchValue={storeState.searchQuery}
+			searchPlaceholder="고객사명, 코드, 주소 검색..."
+			createLabel="고객사 추가"
+			selectedCount={currentSelectedCount}
+			{loading}
+			on:search={(e) => golfCourseStore.search(e.detail)}
+			on:refresh={() => golfCourseStore.loadGolfCourses()}
+			on:create={handleCreate}
+			on:export={handleExport}
+			on:bulkDelete={() => (showBulkDeleteDialog = true)}
 		>
-			<div
-				class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50"
-			>
-				<Users class="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+			<svelte:fragment slot="filters">
+				<select
+					value={storeState.selectedStatus}
+					on:change={(e) =>
+						golfCourseStore.changeFilter(
+							e.currentTarget.value as 'all' | 'active' | 'inactive' | 'maintenance'
+						)}
+					class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+				>
+					<option value="all">전체 상태</option>
+					<option value="active">활성 계약</option>
+					<option value="maintenance">영업 진행</option>
+					<option value="inactive">계약 종료</option>
+				</select>
+			</svelte:fragment>
+		</FilterBar>
+
+		<!-- Data Table -->
+		<DataTable
+			items={storeState.items}
+			{columns}
+			idKey="id"
+			{loading}
+			selectedItems={storeState.selectedItems}
+			sortBy={storeState.sortBy}
+			sortOrder={storeState.sortOrder}
+			page={storeState.page}
+			totalPages={storeState.totalPages}
+			totalItems={storeState.total}
+			on:sort={(e) => golfCourseStore.changeSort(e.detail)}
+			on:select={(e) => golfCourseStore.toggleSelection(String(e.detail))}
+			on:selectAll={golfCourseStore.toggleSelectAll}
+			on:pageChange={(e) => golfCourseStore.changePage(e.detail)}
+		>
+			<div slot="empty-state" class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+				<Building2 class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+				<p class="text-lg font-medium">등록된 고객사가 없습니다</p>
+				<p class="mt-1 text-sm">새로운 고객사를 추가해주세요.</p>
 			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">고객사 리포트</p>
-		</button>
-	</div>
-
-	<!-- Filter Bar -->
-	<FilterBar
-		bind:searchValue={storeState.searchQuery}
-		searchPlaceholder="고객사명, 코드, 주소 검색..."
-		createLabel="고객사 추가"
-		selectedCount={currentSelectedCount}
-		{loading}
-		on:search={(e) => golfCourseStore.search(e.detail)}
-		on:refresh={() => golfCourseStore.loadGolfCourses()}
-		on:create={handleCreate}
-		on:export={handleExport}
-		on:bulkDelete={() => (showBulkDeleteDialog = true)}
-	>
-		<svelte:fragment slot="filters">
-			<select
-				value={storeState.selectedStatus}
-				on:change={(e) =>
-					golfCourseStore.changeFilter(
-						e.currentTarget.value as 'all' | 'active' | 'inactive' | 'maintenance'
-					)}
-				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-			>
-				<option value="all">전체 상태</option>
-				<option value="active">활성 계약</option>
-				<option value="maintenance">영업 진행</option>
-				<option value="inactive">계약 종료</option>
-			</select>
-		</svelte:fragment>
-	</FilterBar>
-
-	<!-- Data Table -->
-	<DataTable
-		items={storeState.items}
-		{columns}
-		idKey="id"
-		{loading}
-		selectedItems={storeState.selectedItems}
-		sortBy={storeState.sortBy}
-		sortOrder={storeState.sortOrder}
-		page={storeState.page}
-		totalPages={storeState.totalPages}
-		totalItems={storeState.total}
-		on:sort={(e) => golfCourseStore.changeSort(e.detail)}
-		on:select={(e) => golfCourseStore.toggleSelection(String(e.detail))}
-		on:selectAll={golfCourseStore.toggleSelectAll}
-		on:pageChange={(e) => golfCourseStore.changePage(e.detail)}
-	>
-		<div
-			slot="empty-state"
-			class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400"
-		>
-			<Building2 class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-			<p class="text-lg font-medium">등록된 고객사가 없습니다</p>
-			<p class="mt-1 text-sm">새로운 고객사를 추가해주세요.</p>
-		</div>
 
 		<svelte:fragment slot="cell-address" let:item>
 			{#if item.address && typeof item.address === 'object'}
@@ -429,8 +374,10 @@
 					<Trash2 class="h-4 w-4" />
 				</button>
 			</div>
-		</svelte:fragment>
-	</DataTable>
+			</svelte:fragment>
+		</DataTable>
+		</div>
+	</div>
 {/if}
 
 <!-- Modals and Dialogs -->
