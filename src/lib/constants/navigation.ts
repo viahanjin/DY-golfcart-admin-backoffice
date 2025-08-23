@@ -98,9 +98,15 @@ export const MENU_ITEMS: NavMenuItem[] = [
 		]
 	},
 	{
+		id: 'client-management',
+		label: '고객 관리',
+		icon: Users,
+		path: '/dashboard/clients'
+	},
+	{
 		id: 'user-management',
 		label: '사용자 관리',
-		icon: Users,
+		icon: Settings,
 		path: '/dashboard/users'
 	},
 	{
