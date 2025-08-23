@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * 공통 API 서비스
  * 모든 API 호출을 위한 기본 서비스 레이어
@@ -5,7 +6,7 @@
 
 import { apiConfig } from '$lib/config/api.config';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = never> {
 	success: boolean;
 	data?: T;
 	error?: ApiError;
@@ -15,10 +16,12 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
 	code: string;
 	message: string;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	details?: any;
 }
 
 export interface RequestOptions extends RequestInit {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	params?: Record<string, any>;
 	timeout?: number;
 }
@@ -34,7 +37,7 @@ class ApiService {
 		options: RequestOptions = {}
 	): Promise<ApiResponse<T>> {
 		const { params, timeout = apiConfig.timeout, ...fetchOptions } = options;
-		
+
 		// URL 생성
 		const url = new URL(`${apiConfig.baseURL}${endpoint}`);
 		if (params) {
@@ -91,11 +94,10 @@ class ApiService {
 				data: data.data || data,
 				message: data.message
 			};
-
 		} catch (error) {
 			clearTimeout(timeoutId);
 			this.abortControllers.delete(requestKey);
-			
+
 			if (error instanceof Error) {
 				if (error.name === 'AbortError') {
 					return {
@@ -106,7 +108,7 @@ class ApiService {
 						}
 					};
 				}
-				
+
 				return {
 					success: false,
 					error: {
@@ -132,7 +134,7 @@ class ApiService {
 	private async handleErrorResponse(response: Response): Promise<ApiResponse> {
 		try {
 			const errorData = await response.json();
-			
+
 			// 401 Unauthorized - 토큰 만료 또는 인증 실패
 			if (response.status === 401) {
 				this.clearAuthToken();
@@ -248,10 +250,14 @@ class ApiService {
 	/**
 	 * 파일 업로드
 	 */
-	async upload<T>(endpoint: string, file: File, additionalData?: Record<string, any>): Promise<ApiResponse<T>> {
+	async upload<T>(
+		endpoint: string,
+		file: File,
+		additionalData?: Record<string, any>
+	): Promise<ApiResponse<T>> {
 		const formData = new FormData();
 		formData.append('file', file);
-		
+
 		if (additionalData) {
 			Object.entries(additionalData).forEach(([key, value]) => {
 				formData.append(key, value);
@@ -274,7 +280,7 @@ class ApiService {
 	 * 모든 진행 중인 요청 취소
 	 */
 	cancelAllRequests(): void {
-		this.abortControllers.forEach(controller => controller.abort());
+		this.abortControllers.forEach((controller) => controller.abort());
 		this.abortControllers.clear();
 	}
 }

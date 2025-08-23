@@ -1,19 +1,9 @@
-import {
-	LayoutGrid,
-	MapPin,
-	List,
-	Map,
-	Car,
-	Route,
-	Users,
-	Settings,
-	BarChart3
-} from 'lucide-svelte';
+import { LayoutGrid, MapPin, List, Map, Car, Users, Settings, BarChart3 } from 'lucide-svelte';
 
 export type NavMenuItem = {
 	id: string;
 	label: string;
-	icon: any; // Lucide-svelte component
+	icon: unknown; // Lucide-svelte component
 	path?: string;
 	description?: string;
 	children?: NavMenuItem[];
