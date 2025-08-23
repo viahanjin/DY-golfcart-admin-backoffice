@@ -20,9 +20,12 @@
 </script>
 
 <!-- 다이얼로그 배경 -->
-<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+<div 
+	class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-40 p-4 backdrop-blur-sm"
+	style="position: fixed; top: 0; left: 0; right: 0; bottom: 0;"
+>
 	<!-- 다이얼로그 창 -->
-	<div class="w-full max-w-md rounded-lg bg-white dark:bg-gray-800">
+	<div class="w-full max-w-md rounded-xl bg-white shadow-2xl ring-1 ring-black/10 dark:bg-gray-800 dark:ring-white/20">
 		<!-- 다이얼로그 헤더 -->
 		<div class="flex items-center gap-3 p-6 pb-4">
 			{#if danger}

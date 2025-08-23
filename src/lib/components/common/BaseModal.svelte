@@ -37,14 +37,16 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
 	on:click={handleClose}
-	class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+	class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-40 p-4 backdrop-blur-sm"
+	style="position: fixed; top: 0; left: 0; right: 0; bottom: 0;"
 >
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 	<div
 		on:click|stopPropagation
-		class="max-h-[90vh] w-full {sizeClasses[size]} flex flex-col overflow-hidden rounded-lg bg-white dark:bg-gray-800"
+		class="max-h-[90vh] w-full {sizeClasses[size]} flex flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/10 dark:bg-gray-800 dark:ring-white/20"
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
 	>
 		<!-- Header -->
 		<div class="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4 sm:p-6 dark:border-gray-700">

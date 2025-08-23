@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { Upload, File } from 'lucide-svelte';
-	import { mapService } from '$lib/services/map.service';
+	import { mapService } from '$lib/services/mapService';
 	import BaseModal from '$lib/components/common/BaseModal.svelte';
 
 	export let modalMode: 'create' | 'edit' | 'view';
@@ -77,7 +77,7 @@
 				mapService.uploadImageFile(file, formData.mapId)
 					.then(result => {
 						console.log('이미지 파일 업로드 성공:', result);
-						if (result.url) {
+						if (result.success && result.url) {
 							formData.mapFiles.imageFile = result.url;
 						}
 					})
@@ -129,7 +129,7 @@
 				mapService.uploadMetadataFolder(files, formData.mapId)
 					.then(result => {
 						console.log('메타데이터 폴더 업로드 성공:', result);
-						if (result.folderPath) {
+						if (result.success && result.folderPath) {
 							formData.mapFiles.metadataFile = result.folderPath;
 						}
 					})
