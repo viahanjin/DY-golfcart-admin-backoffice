@@ -10,7 +10,8 @@
 
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Loader2, CheckSquare, Square } from 'lucide-svelte';
+	import { Loader2, CheckSquare, Square, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Inbox } from 'lucide-svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	// --- PROPS ---
 	export let items: any[] = [];
@@ -73,16 +74,18 @@
 	}
 </script>
 
-<div class="overflow-hidden rounded-lg bg-white shadow dark:bg-gray-800">
+<div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
 	{#if loading && items.length === 0}
-		<div class="flex h-80 items-center justify-center">
+		<div class="flex h-80 flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
 			<Loader2 class="h-8 w-8 animate-spin text-blue-500" />
+			<p class="font-medium">데이터를 불러오는 중...</p>
 		</div>
 	{:else if items.length === 0}
 		<div
-			class="flex h-80 flex-col items-center justify-center text-center text-gray-500 dark:text-gray-400"
+			class="flex h-80 flex-col items-center justify-center gap-3 text-center text-gray-500 dark:text-gray-400"
 		>
 			<slot name="empty-state">
+				<Inbox class="h-12 w-12 text-gray-400" />
 				<p class="text-lg font-medium">표시할 데이터가 없습니다.</p>
 				<p class="mt-1 text-sm">새로운 항목을 추가하거나 필터를 조정해주세요.</p>
 			</slot>
@@ -112,13 +115,17 @@
 								{:else if column.sortable}
 									<button
 										on:click={() => dispatch('sort', column.key)}
-										class="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
+										class="flex items-center gap-2 hover:text-gray-900 dark:hover:text-white"
 									>
 										{column.label}
 										{#if sortBy === column.key}
-											<span class="text-xs transition-transform">
-												{sortOrder === 'asc' ? '▲' : '▼'}
-											</span>
+											{#if sortOrder === 'asc'}
+												<ArrowUp class="h-3 w-3" />
+											{:else}
+												<ArrowDown class="h-3 w-3" />
+											{/if}
+										{:else}
+											<ArrowUpDown class="h-3 w-3 text-gray-400" />
 										{/if}
 									</button>
 								{:else}
@@ -230,21 +237,25 @@
 					<span class="font-medium">{fromItem}</span>-<span class="font-medium">{toItem}</span>
 					표시
 				</div>
-				<div class="flex gap-1">
-					<button
+				<div class="flex items-center gap-2">
+					<Button
+						variant="outline"
+						size="sm"
 						on:click={() => dispatch('pageChange', page - 1)}
 						disabled={page === 1}
-						class="rounded-md px-3 py-1 text-sm enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 dark:enabled:hover:bg-gray-700 dark:disabled:text-gray-500"
 					>
+						<ChevronLeft class="h-4 w-4" />
 						이전
-					</button>
-					<button
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
 						on:click={() => dispatch('pageChange', page + 1)}
 						disabled={page === totalPages}
-						class="rounded-md px-3 py-1 text-sm enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 dark:enabled:hover:bg-gray-700 dark:disabled:text-gray-500"
 					>
 						다음
-					</button>
+						<ChevronRight class="h-4 w-4" />
+					</Button>
 				</div>
 			</div>
 		{/if}

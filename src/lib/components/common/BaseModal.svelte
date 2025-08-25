@@ -16,6 +16,12 @@
 		}
 	}
 
+	function handleBackdropKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			handleClose();
+		}
+	}
+
 	onMount(() => {
 		window.addEventListener('keydown', handleKeydown);
 	});
@@ -34,12 +40,13 @@
 	};
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
 	on:click={handleClose}
+	on:keydown={handleBackdropKeydown}
+	role="button"
+	tabindex="-1"
 	class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
 >
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<div
 		on:click|stopPropagation
 		class="max-h-[90vh] w-full {sizeClasses[size]} flex flex-col overflow-hidden rounded-lg bg-white dark:bg-gray-800"
