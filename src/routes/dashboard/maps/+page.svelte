@@ -268,162 +268,172 @@
 					<AlertCircle class="h-5 w-5 text-red-400" />
 					<p class="ml-3 text-sm text-red-800 dark:text-red-300">{error}</p>
 				</div>
-				<button
+				<Button
+					variant="ghost"
+					size="icon"
 					on:click={mapStore.clearError}
 					class="text-red-500 hover:text-red-700"
 					aria-label="Close error message"
 				>
 					<X class="h-4 w-4" />
-				</button>
+				</Button>
 			</div>
 		{/if}
 
-		<!-- Stats Cards -->
-		<StatsCards {stats} />
+		<div class="space-y-6">
+			<!-- Stats Cards -->
+			<StatsCards {stats} />
 
-		<!-- Filter Bar -->
-		<FilterBar
-			bind:searchValue={storeState.searchQuery}
-			searchPlaceholder="맵 이름, ID 검색..."
-			createLabel="맵 추가"
-			selectedCount={currentSelectedCount}
-			{loading}
-			on:search={(e) => mapStore.search(e.detail)}
-			on:refresh={() => mapStore.loadMaps()}
-			on:create={handleCreate}
-			on:export={() => alert('엑셀 내보내기 기능은 준비중입니다.')}
-			on:bulkDelete={() => (showBulkDeleteDialog = true)}
-		>
-			<svelte:fragment slot="filters">
-				<!-- 골프장 필터 -->
-				<select
-					bind:value={selectedGolfCourseId}
-					on:change={(e) => handleGolfCourseFilter(e.currentTarget.value)}
-					class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				>
-					<option value="all">전체 골프장</option>
-					{#if golfCourseStoreState?.items}
-						{#each golfCourseStoreState.items as course}
-							<option value={course.id}>{course.courseName}</option>
-						{/each}
-					{/if}
-				</select>
-
-				<!-- 맵 상태 필터 -->
-				<select
-					value={storeState.selectedStatus}
-					on:change={(e) => mapStore.changeFilter(e.currentTarget.value)}
-					class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				>
-					<option value="all">전체 상태</option>
-					<option value="active">활성</option>
-					<option value="testing">테스트 중</option>
-					<option value="inactive">비활성</option>
-				</select>
-			</svelte:fragment>
-		</FilterBar>
-
-		<!-- Data Table -->
-		<DataTable
-			items={storeState.items}
-			{columns}
-			idKey="mapId"
-			{loading}
-			selectedItems={storeState.selectedItems}
-			sortBy={storeState.sortBy}
-			sortOrder={storeState.sortOrder}
-			page={storeState.page}
-			totalPages={storeState.totalPages}
-			totalItems={storeState.total}
-			on:sort={(e) => mapStore.changeSort(e.detail)}
-			on:select={(e) => mapStore.toggleSelection(String(e.detail))}
-			on:selectAll={mapStore.toggleSelectAll}
-			on:pageChange={(e) => mapStore.changePage(e.detail)}
-		>
-			<div
-				slot="empty-state"
-				class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400"
+			<!-- Filter Bar -->
+			<FilterBar
+				bind:searchValue={storeState.searchQuery}
+				searchPlaceholder="맵 이름, ID 검색..."
+				createLabel="맵 추가"
+				selectedCount={currentSelectedCount}
+				{loading}
+				on:search={(e) => mapStore.search(e.detail)}
+				on:refresh={() => mapStore.loadMaps()}
+				on:create={handleCreate}
+				on:export={() => alert('엑셀 내보내기 기능은 준비중입니다.')}
+				on:bulkDelete={() => (showBulkDeleteDialog = true)}
 			>
-				<Map class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-				<p class="text-lg font-medium">등록된 맵이 없습니다</p>
-				<p class="mt-1 text-sm">새로운 맵을 추가해주세요.</p>
-			</div>
+				<svelte:fragment slot="filters">
+					<!-- 골프장 필터 -->
+					<select
+						bind:value={selectedGolfCourseId}
+						on:change={(e) => handleGolfCourseFilter(e.currentTarget.value)}
+						class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+					>
+						<option value="all">전체 골프장</option>
+						{#if golfCourseStoreState?.items}
+							{#each golfCourseStoreState.items as course}
+								<option value={course.id}>{course.courseName}</option>
+							{/each}
+						{/if}
+					</select>
 
-			<svelte:fragment slot="cell-mapName" let:item>
-				<div>
-					<p class="font-medium text-gray-900 dark:text-white">{item.mapName}</p>
-					<p class="text-sm text-gray-500 dark:text-gray-400">{item.mapId}</p>
+					<!-- 맵 상태 필터 -->
+					<select
+						value={storeState.selectedStatus}
+						on:change={(e) => mapStore.changeFilter(e.currentTarget.value)}
+						class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+					>
+						<option value="all">전체 상태</option>
+						<option value="active">활성</option>
+						<option value="testing">테스트 중</option>
+						<option value="inactive">비활성</option>
+					</select>
+				</svelte:fragment>
+			</FilterBar>
+
+			<!-- Data Table -->
+			<DataTable
+				items={storeState.items}
+				{columns}
+				idKey="mapId"
+				{loading}
+				selectedItems={storeState.selectedItems}
+				sortBy={storeState.sortBy}
+				sortOrder={storeState.sortOrder}
+				page={storeState.page}
+				totalPages={storeState.totalPages}
+				totalItems={storeState.total}
+				on:sort={(e) => mapStore.changeSort(e.detail)}
+				on:select={(e) => mapStore.toggleSelection(String(e.detail))}
+				on:selectAll={mapStore.toggleSelectAll}
+				on:pageChange={(e) => mapStore.changePage(e.detail)}
+			>
+				<div
+					slot="empty-state"
+					class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400"
+				>
+					<Map class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+					<p class="text-lg font-medium">등록된 맵이 없습니다</p>
+					<p class="mt-1 text-sm">새로운 맵을 추가해주세요.</p>
 				</div>
-			</svelte:fragment>
 
-			<svelte:fragment slot="cell-version" let:item>
-				<span class="text-gray-900 dark:text-gray-200">
-					v{item.version}
-				</span>
-			</svelte:fragment>
+				<svelte:fragment slot="cell-mapName" let:item>
+					<div>
+						<p class="font-medium text-gray-900 dark:text-white">{item.mapName}</p>
+						<p class="text-sm text-gray-500 dark:text-gray-400">{item.mapId}</p>
+					</div>
+				</svelte:fragment>
 
-			<svelte:fragment slot="cell-connectedGolfCourseId" let:item>
-				<span class="text-gray-900 dark:text-gray-200">
-					{#if item.golfCourseName && item.golfCourseName !== item.connectedGolfCourseId}
-						{item.golfCourseName}
-					{:else}
-						{item.connectedGolfCourseId || '-'}
-					{/if}
-				</span>
-			</svelte:fragment>
-
-			<svelte:fragment slot="cell-mapStatus" let:item>
-				{@const status = getStatusInfo(item.mapStatus.status)}
-				<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
-					{status.text}
-				</span>
-			</svelte:fragment>
-
-			<svelte:fragment slot="cell-mapData" let:item>
-				{@const validation = getValidationInfo(item.mapStatus.validationStatus)}
-				<div class="flex items-center justify-center gap-1">
-					<svelte:component
-						this={getValidationIcon(item.mapStatus.validationStatus)}
-						class={getValidationClass(item.mapStatus.validationStatus)}
-					/>
-					<span class="text-xs font-medium {validation.textColor}">
-						{validation.text}
+				<svelte:fragment slot="cell-version" let:item>
+					<span class="text-gray-900 dark:text-gray-200">
+						v{item.version}
 					</span>
-				</div>
-			</svelte:fragment>
+				</svelte:fragment>
 
-			<svelte:fragment slot="cell-updatedAt" let:item>
-				<span class="text-gray-900 dark:text-gray-200">
-					{formatDate(item.updatedAt)}
-				</span>
-			</svelte:fragment>
+				<svelte:fragment slot="cell-connectedGolfCourseId" let:item>
+					<span class="text-gray-900 dark:text-gray-200">
+						{#if item.golfCourseName && item.golfCourseName !== item.connectedGolfCourseId}
+							{item.golfCourseName}
+						{:else}
+							{item.connectedGolfCourseId || '-'}
+						{/if}
+					</span>
+				</svelte:fragment>
 
-			<svelte:fragment slot="cell-actions" let:item>
-				<div class="flex items-center justify-center gap-1">
-					<button
-						on:click={() => handleView(item)}
-						class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700"
-						title="상세보기"
-					>
-						<Eye class="h-4 w-4" />
-					</button>
-					<button
-						on:click={() => handleEdit(item)}
-						class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700"
-						title="수정"
-					>
-						<Edit class="h-4 w-4" />
-					</button>
-					<button
-						on:click={() => handleDelete(item)}
-						class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700"
-						title="삭제"
-					>
-						<Trash2 class="h-4 w-4" />
-					</button>
-				</div>
-			</svelte:fragment>
-		</DataTable>
+				<svelte:fragment slot="cell-mapStatus" let:item>
+					{@const status = getStatusInfo(item.mapStatus.status)}
+					<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
+						{status.text}
+					</span>
+				</svelte:fragment>
+
+				<svelte:fragment slot="cell-mapData" let:item>
+					{@const validation = getValidationInfo(item.mapStatus.validationStatus)}
+					<div class="flex items-center justify-center gap-1">
+						<svelte:component
+							this={getValidationIcon(item.mapStatus.validationStatus)}
+							class={getValidationClass(item.mapStatus.validationStatus)}
+						/>
+						<span class="text-xs font-medium {validation.textColor}">
+							{validation.text}
+						</span>
+					</div>
+				</svelte:fragment>
+
+				<svelte:fragment slot="cell-updatedAt" let:item>
+					<span class="text-gray-900 dark:text-gray-200">
+						{formatDate(item.updatedAt)}
+					</span>
+				</svelte:fragment>
+
+				<svelte:fragment slot="cell-actions" let:item>
+					<div class="flex items-center justify-center gap-1">
+						<Button
+							on:click={() => handleView(item)}
+							variant="ghost"
+							size="icon"
+							class="text-gray-600 hover:text-blue-600"
+							title="상세보기"
+						>
+							<Eye class="h-4 w-4" />
+						</Button>
+						<Button
+							on:click={() => handleEdit(item)}
+							variant="ghost"
+							size="icon"
+							class="text-gray-600 hover:text-green-600"
+							title="수정"
+						>
+							<Edit class="h-4 w-4" />
+						</Button>
+						<Button
+							on:click={() => handleDelete(item)}
+							variant="ghost"
+							size="icon"
+							class="text-gray-600 hover:text-red-600"
+							title="삭제"
+						>
+							<Trash2 class="h-4 w-4" />
+						</Button>
+					</div>
+				</svelte:fragment>
+			</DataTable>
+		</div>
 	</div>
 {/if}
 

@@ -149,90 +149,94 @@
 				<AlertCircle class="h-5 w-5 text-red-400" />
 				<p class="ml-3 text-sm text-red-800 dark:text-red-300">{error}</p>
 			</div>
-			<button on:click={cartStore.clearError} class="text-red-500 hover:text-red-700" aria-label="Close error message">
+			<Button
+				variant="ghost"
+				size="icon"
+				on:click={cartStore.clearError}
+				class="text-red-500 hover:text-red-700"
+				aria-label="Close error message"
+			>
 				<X class="h-4 w-4" />
-			</button>
+			</Button>
 		</div>
 	{/if}
+	<div class="space-y-6">
+		<!-- Stats Cards -->
+		<StatsCards {stats} />
 
-	<!-- Stats Cards -->
-	<StatsCards {stats} />
+		<!-- Filter Bar -->
+		<FilterBar
+			bind:searchValue={storeState.searchQuery}
+			searchPlaceholder="카트 ID, 이름 검색..."
+			createLabel="카트 추가"
+			selectedCount={currentSelectedCount}
+			loading={loading}
+			on:search={(e) => cartStore.search(e.detail)}
+			on:refresh={() => cartStore.loadCarts()}
+			on:create={handleCreate}
+			on:export={() => alert('엑셀 내보내기 기능은 준비중입니다.')}
+			on:bulkDelete={() => (showBulkDeleteDialog = true)}
+		>
+			<svelte:fragment slot="filters">
+				<select
+					value={storeState.selectedStatus}
+					on:change={(e) => cartStore.changeFilter(e.currentTarget.value)}
+					class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+				>
+					<option value="all">전체 상태</option>
+					<option value="available">운행 가능</option>
+					<option value="maintenance">정비 중</option>
+					<option value="broken">고장</option>
+					<option value="unavailable">미사용</option>
+				</select>
+			</svelte:fragment>
+		</FilterBar>
 
-	<!-- Filter Bar -->
-	<FilterBar
-		bind:searchValue={storeState.searchQuery}
-		searchPlaceholder="카트 ID, 이름 검색..."
-		createLabel="카트 추가"
-		selectedCount={currentSelectedCount}
-		loading={loading}
-		on:search={(e) => cartStore.search(e.detail)}
-		on:refresh={() => cartStore.loadCarts()}
-		on:create={handleCreate}
-		on:export={() => alert('엑셀 내보내기 기능은 준비중입니다.')}
-		on:bulkDelete={() => (showBulkDeleteDialog = true)}
-	>
-		<svelte:fragment slot="filters">
-			<select
-				value={storeState.selectedStatus}
-				on:change={(e) => cartStore.changeFilter(e.currentTarget.value as any)}
-				class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-			>
-				<option value="all">전체 상태</option>
-				<option value="AVAILABLE">운행 가능</option>
-				<option value="IN_USE">사용 중</option>
-				<option value="CHARGING">충전 중</option>
-				<option value="MAINTENANCE">정비 중</option>
-			</select>
-		</svelte:fragment>
-	</FilterBar>
-
-	<!-- Data Table -->
-	<DataTable
-		items={storeState.items}
-		{columns}
-		idKey="id"
-		loading={loading}
-		selectedItems={storeState.selectedItems}
-		sortBy={storeState.sortBy}
-		sortOrder={storeState.sortOrder}
-		page={storeState.page}
-		totalPages={storeState.totalPages}
-		totalItems={storeState.total}
-		on:sort={(e) => {
-			const newOrder = storeState.sortBy === e.detail && storeState.sortOrder === 'asc' ? 'desc' : 'asc';
-			cartStore.changeSort({ sortBy: e.detail, sortOrder: newOrder } as any);
-		}}
-		on:select={(e) => cartStore.toggleSelection(String(e.detail))}
-		on:selectAll={cartStore.toggleSelectAll}
-		on:pageChange={(e) => cartStore.changePage(e.detail)}
-	>
-		<div slot="empty-state" class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-			<Car class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-			<p class="text-lg font-medium">등록된 카트가 없습니다</p>
-			<p class="mt-1 text-sm">새로운 카트를 추가해주세요.</p>
-		</div>
-
-		<svelte:fragment slot="cell-status" let:item>
-			{@const status = getStatusInfo(item.status)}
-			<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
-				{status.text}
-			</span>
-		</svelte:fragment>
-
-		<svelte:fragment slot="cell-actions" let:item>
-			<div class="flex items-center justify-center gap-1">
-				<button on:click={() => handleView(item)} class="rounded-lg p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20" title="상세보기">
-					<Eye class="h-4 w-4" />
-				</button>
-				<button on:click={() => handleEdit(item)} class="rounded-lg p-2 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20" title="수정">
-					<Edit class="h-4 w-4" />
-				</button>
-				<button on:click={() => handleDelete(item)} class="rounded-lg p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" title="삭제">
-					<Trash2 class="h-4 w-4" />
-				</button>
+		<!-- Data Table -->
+		<DataTable
+			items={storeState.items}
+			{columns}
+			idKey="id"
+			loading={loading}
+			selectedItems={storeState.selectedItems}
+			sortBy={storeState.sortBy}
+			sortOrder={storeState.sortOrder}
+			page={storeState.page}
+			totalPages={storeState.totalPages}
+			totalItems={storeState.total}
+			on:sort={(e) => cartStore.changeSort(e.detail)}
+			on:select={(e) => cartStore.toggleSelection(e.detail)}
+			on:selectAll={cartStore.toggleSelectAll}
+			on:pageChange={(e) => cartStore.changePage(e.detail)}
+		>
+			<div slot="empty-state" class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+				<Car class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+				<p class="text-lg font-medium">등록된 카트가 없습니다</p>
+				<p class="mt-1 text-sm">새로운 카트를 추가해주세요.</p>
 			</div>
-		</svelte:fragment>
-	</DataTable>
+
+			<svelte:fragment slot="cell-cartStatus.currentState" let:item>
+				{@const status = getStatusInfo(item.cartStatus.currentState)}
+				<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
+					{status.text}
+				</span>
+			</svelte:fragment>
+
+			<svelte:fragment slot="cell-actions" let:item>
+				<div class="flex items-center justify-center gap-1">
+					<Button on:click={() => handleView(item)} variant="ghost" size="icon" class="text-gray-600 hover:text-blue-600" title="상세보기">
+						<Eye class="h-4 w-4" />
+					</Button>
+					<Button on:click={() => handleEdit(item)} variant="ghost" size="icon" class="text-gray-600 hover:text-green-600" title="수정">
+						<Edit class="h-4 w-4" />
+					</Button>
+					<Button on:click={() => handleDelete(item)} variant="ghost" size="icon" class="text-gray-600 hover:text-red-600" title="삭제">
+						<Trash2 class="h-4 w-4" />
+					</Button>
+				</div>
+			</svelte:fragment>
+		</DataTable>
+	</div>
 </div>
 {/if}
 

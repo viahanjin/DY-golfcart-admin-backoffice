@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Search, Plus, RefreshCw, Download, Trash2 } from 'lucide-svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	export let searchValue = '';
 	export let searchPlaceholder = '검색...';
@@ -25,10 +26,10 @@
 </script>
 
 <div
-	class="mb-4 flex flex-col gap-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:flex-row sm:items-center sm:justify-between"
+	class="mb-4 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:flex-row sm:items-center sm:justify-between"
 >
 	<!-- Left side: Search and Filters -->
-	<div class="flex flex-1 items-center gap-2">
+	<div class="flex flex-1 items-center gap-3">
 		<!-- Search -->
 		<div class="relative flex-1 sm:max-w-xs">
 			<Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -37,7 +38,7 @@
 				bind:value={searchValue}
 				on:input={handleSearchInput}
 				placeholder={searchPlaceholder}
-				class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+				class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			/>
 		</div>
 
@@ -48,41 +49,49 @@
 	<!-- Right side: Action Buttons -->
 	<div class="flex items-center gap-2">
 		{#if selectedCount > 0}
-			<button
+			<Button
+				variant="danger"
+				size="sm"
 				on:click={() => dispatch('bulkDelete')}
-				class="flex items-center gap-2 whitespace-nowrap rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 sm:px-4"
+				class="whitespace-nowrap"
 			>
 				<Trash2 class="h-4 w-4" />
 				<span class="hidden sm:inline">삭제 ({selectedCount})</span>
-			</button>
+			</Button>
 		{/if}
 
-		<button
+		<Button
+			variant="outline"
+			size="sm"
 			on:click={() => dispatch('refresh')}
 			disabled={loading}
 			title="새로고침"
-			class="flex items-center gap-2 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+			class="whitespace-nowrap"
 		>
 			<RefreshCw class="h-4 w-4 {loading ? 'animate-spin' : ''}" />
 			<span class="hidden sm:inline">새로고침</span>
-		</button>
+		</Button>
 
 		<slot name="actions" />
 
-		<button
+		<Button
+			variant="outline"
+			size="sm"
 			on:click={() => dispatch('export')}
-			class="hidden items-center gap-2 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:flex"
+			class="hidden whitespace-nowrap sm:flex"
 		>
 			<Download class="h-4 w-4" />
 			<span>엑셀</span>
-		</button>
+		</Button>
 
-		<button
+		<Button
+			variant="primary"
+			size="sm"
 			on:click={() => dispatch('create')}
-			class="flex items-center gap-2 whitespace-nowrap rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 sm:px-4"
+			class="whitespace-nowrap"
 		>
 			<Plus class="h-4 w-4" />
 			<span class="hidden sm:inline">{createLabel}</span>
-		</button>
+		</Button>
 	</div>
 </div>
