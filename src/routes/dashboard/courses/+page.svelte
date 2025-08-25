@@ -19,13 +19,16 @@
 	let selectedCourse: Course | null = null;
 
 	// 골프장별로 코스 그룹화
-	$: groupedCourses = courses.reduce((acc, course) => {
-		if (!acc[course.golfCourseName]) {
-			acc[course.golfCourseName] = [];
-		}
-		acc[course.golfCourseName].push(course);
-		return acc;
-	}, {} as Record<string, Course[]>);
+	$: groupedCourses = courses.reduce(
+		(acc, course) => {
+			if (!acc[course.golfCourseName]) {
+				acc[course.golfCourseName] = [];
+			}
+			acc[course.golfCourseName].push(course);
+			return acc;
+		},
+		{} as Record<string, Course[]>
+	);
 
 	function handleCreate() {
 		modalMode = 'create';
@@ -45,7 +48,7 @@
 		if (mode === 'create') {
 			courses = [...courses, { ...data, golfCourseName: '새 골프장', hasMap: false }]; // 임시 데이터
 		} else {
-			courses = courses.map(c => c.courseId === data.courseId ? { ...c, ...data } : c);
+			courses = courses.map((c) => (c.courseId === data.courseId ? { ...c, ...data } : c));
 		}
 		showModal = false;
 	}
@@ -62,7 +65,10 @@
 			<h1 class="mb-1 text-2xl font-bold">코스 관리</h1>
 			<p class="text-gray-600">골프장별 코스를 관리하고 맵을 연결합니다.</p>
 		</div>
-		<button on:click={handleCreate} class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+		<button
+			on:click={handleCreate}
+			class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+		>
 			<Plus class="h-4 w-4" />
 			새 코스 등록
 		</button>
@@ -77,14 +83,24 @@
 					{#each courseList as course (course.courseId)}
 						<div class="flex flex-col rounded-lg border p-4 text-center dark:border-gray-600">
 							<h3 class="text-lg font-bold dark:text-white">{course.courseName}</h3>
-							<p class="text-sm text-gray-500 dark:text-gray-400">{course.holeCount}홀, {course.difficulty}</p>
-							<div class="my-4 flex items-center justify-center gap-2 {course.hasMap ? 'text-green-500' : 'text-red-500'}">
+							<p class="text-sm text-gray-500 dark:text-gray-400">
+								{course.holeCount}홀, {course.difficulty}
+							</p>
+							<div
+								class="my-4 flex items-center justify-center gap-2 {course.hasMap
+									? 'text-green-500'
+									: 'text-red-500'}"
+							>
 								<Map class="h-5 w-5" />
 								<span>맵: {course.hasMap ? '있음' : '없음'}</span>
 							</div>
 							<div class="mt-auto flex justify-center gap-2">
-								<button on:click={() => handleEdit(course)} class="btn-secondary text-sm">수정</button>
-								<button on:click={() => handleMapEdit(course)} class="btn-secondary text-sm">맵 편집</button>
+								<button on:click={() => handleEdit(course)} class="btn-secondary text-sm"
+									>수정</button
+								>
+								<button on:click={() => handleMapEdit(course)} class="btn-secondary text-sm"
+									>맵 편집</button
+								>
 							</div>
 						</div>
 					{/each}
@@ -95,5 +111,10 @@
 </div>
 
 {#if showModal}
-	<CourseModal {modalMode} {selectedCourse} on:save={handleModalSave} on:close={() => showModal = false} />
+	<CourseModal
+		{modalMode}
+		{selectedCourse}
+		on:save={handleModalSave}
+		on:close={() => (showModal = false)}
+	/>
 {/if}

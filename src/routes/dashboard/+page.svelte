@@ -14,10 +14,10 @@
 		Radio,
 		Eye
 	} from 'lucide-svelte';
-	
+
 	// Component Imports
 	import GolfCourseModal from '$lib/components/golf/GolfCourseModal.svelte';
-	
+
 	// Store Imports
 	import { golfCourseStore } from '$lib/stores/golf-course.store';
 	import type { GolfCourse } from '$lib/types/golf-course';
@@ -35,20 +35,50 @@
 	};
 
 	// 최근 고객사 현황 (실제 데이터에서 가져옴)
-	$: recentClients = golfCourseData && golfCourseData.items ? 
-		golfCourseData.items.slice(0, 4).map((client: any) => ({
-			name: client.courseName,
-			carts: client.totalCarts || 0,
-			holes: client.operation?.totalHoles || 18,
-			status: client.status,
-			statusText: client.status === 'active' ? '정상 운영' : 
-						client.status === 'maintenance' ? '정비 중' : '영업 진행'
-		})) : [
-			{ name: '서울 컨트리클럽', carts: 85, holes: 36, status: 'active', statusText: '정상 운영' },
-			{ name: '부산 레이크사이드CC', carts: 63, holes: 18, status: 'maintenance', statusText: '정비 중' },
-			{ name: '제주 오션뷰 골프장', carts: 42, holes: 18, status: 'active', statusText: '정상 운영' },
-			{ name: '경기 파인밸리CC', carts: 0, holes: 36, status: 'pending', statusText: '영업 진행' }
-		];
+	$: recentClients =
+		golfCourseData && golfCourseData.items
+			? golfCourseData.items.slice(0, 4).map((client: any) => ({
+					name: client.courseName,
+					carts: client.totalCarts || 0,
+					holes: client.operation?.totalHoles || 18,
+					status: client.status,
+					statusText:
+						client.status === 'active'
+							? '정상 운영'
+							: client.status === 'maintenance'
+								? '정비 중'
+								: '영업 진행'
+				}))
+			: [
+					{
+						name: '서울 컨트리클럽',
+						carts: 85,
+						holes: 36,
+						status: 'active',
+						statusText: '정상 운영'
+					},
+					{
+						name: '부산 레이크사이드CC',
+						carts: 63,
+						holes: 18,
+						status: 'maintenance',
+						statusText: '정비 중'
+					},
+					{
+						name: '제주 오션뷰 골프장',
+						carts: 42,
+						holes: 18,
+						status: 'active',
+						statusText: '정상 운영'
+					},
+					{
+						name: '경기 파인밸리CC',
+						carts: 0,
+						holes: 36,
+						status: 'pending',
+						statusText: '영업 진행'
+					}
+				];
 
 	// A/S 요청 현황
 	let maintenanceRequests = [
@@ -74,16 +104,19 @@
 
 	// Store state
 	let golfCourseData: any = null;
-	
-	// Store subscriptions  
-	const unsubscribeGolfCourse = golfCourseStore.subscribe(value => {
+
+	// Store subscriptions
+	const unsubscribeGolfCourse = golfCourseStore.subscribe((value) => {
 		golfCourseData = value;
-		
+
 		// 실제 데이터로 비즈니스 통계 업데이트
 		if (value && value.items) {
 			businessStats.totalClients = value.total || value.items.length;
 			businessStats.activeClients = value.items.filter((c: any) => c.status === 'active').length;
-			businessStats.totalCarts = value.items.reduce((sum: number, c: any) => sum + (c.totalCarts || 0), 0);
+			businessStats.totalCarts = value.items.reduce(
+				(sum: number, c: any) => sum + (c.totalCarts || 0),
+				0
+			);
 		}
 	});
 
@@ -91,7 +124,7 @@
 	onMount(() => {
 		// 실제 데이터 로드
 		golfCourseStore.loadGolfCourses();
-		
+
 		const interval = setInterval(() => {
 			currentTime = new Date().toLocaleString('ko-KR');
 		}, 1000);
@@ -140,10 +173,10 @@
 
 	async function handleClientModalSave(event: CustomEvent) {
 		const { mode, data } = event.detail;
-		
+
 		try {
 			let success = false;
-			
+
 			if (mode === 'create') {
 				// 새 고객사 생성
 				success = await golfCourseStore.createGolfCourse(data);
@@ -159,7 +192,7 @@
 					alert('고객사 정보가 성공적으로 수정되었습니다!');
 				}
 			}
-			
+
 			if (success) {
 				showClientModal = false;
 				selectedClient = null;
@@ -174,19 +207,27 @@
 
 	function getStatusClass(status: string) {
 		switch (status) {
-			case 'active': return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400';
-			case 'maintenance': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-400';
-			case 'pending': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400';
-			default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400';
+			case 'active':
+				return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400';
+			case 'maintenance':
+				return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-400';
+			case 'pending':
+				return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400';
+			default:
+				return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400';
 		}
 	}
 
 	function getPriorityClass(priority: string) {
 		switch (priority) {
-			case 'high': return 'text-red-600 dark:text-red-400';
-			case 'medium': return 'text-yellow-600 dark:text-yellow-400'; 
-			case 'low': return 'text-green-600 dark:text-green-400';
-			default: return 'text-gray-600 dark:text-gray-400';
+			case 'high':
+				return 'text-red-600 dark:text-red-400';
+			case 'medium':
+				return 'text-yellow-600 dark:text-yellow-400';
+			case 'low':
+				return 'text-green-600 dark:text-green-400';
+			default:
+				return 'text-gray-600 dark:text-gray-400';
 		}
 	}
 </script>
@@ -199,7 +240,9 @@
 <div class="space-y-6 p-6">
 	<!-- 알림 -->
 	{#if businessStats.pendingMaintenanceRequests > 0}
-		<div class="rounded-lg bg-amber-50 border border-amber-200 p-4 dark:bg-amber-900/20 dark:border-amber-800">
+		<div
+			class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+		>
 			<div class="flex items-center">
 				<AlertTriangle class="h-5 w-5 text-amber-600 dark:text-amber-400" />
 				<div class="ml-3">
@@ -214,20 +257,22 @@
 	<!-- 헤더 섹션 -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="mb-1 text-2xl font-bold text-gray-900 dark:text-white">DY Golf Systems 비즈니스 대시보드</h1>
+			<h1 class="mb-1 text-2xl font-bold text-gray-900 dark:text-white">
+				DY Golf Systems 비즈니스 대시보드
+			</h1>
 			<p class="text-gray-600 dark:text-gray-400">고객사 현황, 납품 카트 모니터링 및 매출 분석</p>
 		</div>
 
 		<div class="flex items-center gap-4">
 			<!-- 새 고객사 등록 버튼 -->
-			<button 
+			<button
 				on:click={handleCreateClient}
-				class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+				class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
 			>
 				<Building2 class="h-4 w-4" />
 				새 고객사 등록
 			</button>
-			
+
 			<!-- 실시간 시간 표시 -->
 			<div class="text-right">
 				<div class="mb-1 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -244,7 +289,9 @@
 	<!-- 주요 비즈니스 지표 -->
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
 		<!-- 총 고객사 -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 hover:shadow-md transition-shadow">
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+		>
 			<div class="mb-4 flex items-center justify-between">
 				<div class="rounded-lg bg-blue-100 p-3 dark:bg-blue-900/50">
 					<Building2 class="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -266,7 +313,9 @@
 		</div>
 
 		<!-- 총 납품 카트 -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 hover:shadow-md transition-shadow">
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+		>
 			<div class="mb-4 flex items-center justify-between">
 				<div class="rounded-lg bg-purple-100 p-3 dark:bg-purple-900/50">
 					<Car class="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -288,7 +337,9 @@
 		</div>
 
 		<!-- 시스템 가동률 -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 hover:shadow-md transition-shadow">
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+		>
 			<div class="mb-4 flex items-center justify-between">
 				<div class="rounded-lg bg-green-100 p-3 dark:bg-green-900/50">
 					<Radio class="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -312,7 +363,9 @@
 		</div>
 
 		<!-- 이번 분기 매출 -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 hover:shadow-md transition-shadow">
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+		>
 			<div class="mb-4 flex items-center justify-between">
 				<div class="rounded-lg bg-green-100 p-3 dark:bg-green-900/50">
 					<DollarSign class="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -337,25 +390,42 @@
 	<!-- 고객사 및 A/S 현황 -->
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 		<!-- 주요 고객사 현황 -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+		>
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-white">주요 고객사 현황</h2>
-				<button on:click={navigateToClients} class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+				<button
+					on:click={navigateToClients}
+					class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+				>
 					<Eye class="h-4 w-4" />
 					전체보기
 				</button>
 			</div>
-			
+
 			<div class="space-y-3">
 				{#each recentClients as client}
-					<button type="button" class="w-full flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition-colors text-left dark:border-gray-700 dark:hover:bg-gray-700/50" on:click={() => handleClientClick(client.name)}>
+					<button
+						type="button"
+						class="flex w-full items-center justify-between rounded-lg border border-gray-100 p-3 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
+						on:click={() => handleClientClick(client.name)}
+					>
 						<div>
-							<div class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">{client.name}</div>
+							<div
+								class="font-medium text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+							>
+								{client.name}
+							</div>
 							<div class="text-sm text-gray-500 dark:text-gray-400">
 								카트 {client.carts}대 • {client.holes}홀
 							</div>
 						</div>
-						<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusClass(client.status)}">
+						<span
+							class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusClass(
+								client.status
+							)}"
+						>
 							{client.statusText}
 						</span>
 					</button>
@@ -364,28 +434,53 @@
 		</div>
 
 		<!-- A/S 요청 현황 -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+		>
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-white">A/S 요청 현황</h2>
-				<button on:click={navigateToMaintenance} class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+				<button
+					on:click={navigateToMaintenance}
+					class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+				>
 					<Wrench class="h-4 w-4" />
 					관리하기
 				</button>
 			</div>
-			
+
 			<div class="space-y-3">
 				{#each maintenanceRequests as request}
-					<button type="button" class="w-full flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition-colors text-left dark:border-gray-700 dark:hover:bg-gray-700/50" on:click={() => navigateToMaintenance()}>
+					<button
+						type="button"
+						class="flex w-full items-center justify-between rounded-lg border border-gray-100 p-3 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
+						on:click={() => navigateToMaintenance()}
+					>
 						<div>
-							<div class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">{request.type}</div>
+							<div
+								class="font-medium text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+							>
+								{request.type}
+							</div>
 							<div class="text-sm text-gray-500 dark:text-gray-400">
-								{request.client} • {request.count}대 • 
+								{request.client} • {request.count}대 •
 								<span class={getPriorityClass(request.priority)}>
-									{request.priority === 'high' ? '긴급' : request.priority === 'medium' ? '일반' : '예정'}
+									{request.priority === 'high'
+										? '긴급'
+										: request.priority === 'medium'
+											? '일반'
+											: '예정'}
 								</span>
 							</div>
 						</div>
-						<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusClass(request.status === '대기 중' ? 'maintenance' : request.status === '처리 중' ? 'pending' : 'active')}">
+						<span
+							class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusClass(
+								request.status === '대기 중'
+									? 'maintenance'
+									: request.status === '처리 중'
+										? 'pending'
+										: 'active'
+							)}"
+						>
 							{request.status}
 						</span>
 					</button>
@@ -396,39 +491,62 @@
 
 	<!-- 빠른 액션 -->
 	<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-		<button on:click={handleCreateClient} class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-blue-900/20">
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+		<button
+			on:click={handleCreateClient}
+			class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-blue-900/20"
+		>
+			<div
+				class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50"
+			>
 				<Building2 class="h-6 w-6 text-blue-600 dark:text-blue-400" />
 			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">신규 고객사<br>등록</p>
+			<p class="text-sm font-medium text-gray-900 dark:text-white">신규 고객사<br />등록</p>
 		</button>
-		
-		<button on:click={navigateToCarts} class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-green-400 hover:bg-green-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-green-500 dark:hover:bg-green-900/20">
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
+
+		<button
+			on:click={navigateToCarts}
+			class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-green-400 hover:bg-green-50 dark:border-gray-600 dark:hover:border-green-500 dark:hover:bg-green-900/20"
+		>
+			<div
+				class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50"
+			>
 				<Car class="h-6 w-6 text-green-600 dark:text-green-400" />
 			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">카트<br>납품 등록</p>
+			<p class="text-sm font-medium text-gray-900 dark:text-white">카트<br />납품 등록</p>
 		</button>
-		
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-purple-400 hover:bg-purple-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-purple-500 dark:hover:bg-purple-900/20">
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50">
+
+		<div
+			class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-purple-400 hover:bg-purple-50 dark:border-gray-600 dark:hover:border-purple-500 dark:hover:bg-purple-900/20"
+		>
+			<div
+				class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50"
+			>
 				<MapPin class="h-6 w-6 text-purple-600 dark:text-purple-400" />
 			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">맵 데이터<br>업데이트</p>
+			<p class="text-sm font-medium text-gray-900 dark:text-white">맵 데이터<br />업데이트</p>
 		</div>
-		
-		<button on:click={navigateToMaintenance} class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-yellow-400 hover:bg-yellow-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-yellow-500 dark:hover:bg-yellow-900/20">
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50">
+
+		<button
+			on:click={navigateToMaintenance}
+			class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-yellow-400 hover:bg-yellow-50 dark:border-gray-600 dark:hover:border-yellow-500 dark:hover:bg-yellow-900/20"
+		>
+			<div
+				class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50"
+			>
 				<Wrench class="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
 			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">A/S 요청<br>처리</p>
+			<p class="text-sm font-medium text-gray-900 dark:text-white">A/S 요청<br />처리</p>
 		</button>
-		
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition-colors dark:border-gray-600 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20">
-			<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50">
+
+		<div
+			class="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50 dark:border-gray-600 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20"
+		>
+			<div
+				class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50"
+			>
 				<TrendingUp class="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
 			</div>
-			<p class="text-sm font-medium text-gray-900 dark:text-white">매출 분석<br>보고서</p>
+			<p class="text-sm font-medium text-gray-900 dark:text-white">매출 분석<br />보고서</p>
 		</div>
 	</div>
 </div>

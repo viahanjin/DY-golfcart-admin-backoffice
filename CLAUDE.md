@@ -35,6 +35,7 @@ npm run build-storybook # Build Storybook static site
 ## High-Level Architecture
 
 ### Tech Stack
+
 - **Framework**: SvelteKit with Svelte 5 (using runes API)
 - **Styling**: Tailwind CSS v4 with @tailwindcss/forms
 - **Language**: TypeScript
@@ -102,6 +103,7 @@ src/
 ### Dashboard Features
 
 The dashboard provides management interfaces for:
+
 - **Golf Courses**: CRUD operations with location data (lat/lng, RTK support)
 - **Carts**: Fleet management with status tracking
 - **Courses**: Individual course configuration within golf courses

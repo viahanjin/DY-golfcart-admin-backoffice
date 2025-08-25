@@ -15,6 +15,7 @@ src/lib/services/
 ## 🔧 환경 설정
 
 ### 1. 환경 변수 설정
+
 `.env.example`을 복사해서 `.env` 파일을 생성하고 API URL을 설정하세요.
 
 ```bash
@@ -22,11 +23,13 @@ cp .env.example .env
 ```
 
 `.env` 파일 내용:
+
 ```env
 VITE_API_BASE_URL=http://localhost:3000/api
 ```
 
 ### 2. API 서버 URL 변경
+
 개발/운영 환경에 맞게 `VITE_API_BASE_URL`을 수정하세요.
 
 ## 🚀 API 연동 방법
@@ -49,6 +52,7 @@ async getGolfCourses() {
 ```
 
 **필요한 엔드포인트**:
+
 - `GET /golf-courses` - 골프장 목록 조회
 - `GET /golf-courses/:id` - 골프장 상세 조회
 - `POST /golf-courses` - 골프장 생성
@@ -63,6 +67,7 @@ async getGolfCourses() {
 **파일**: `src/lib/services/cartService.ts`
 
 **필요한 엔드포인트**:
+
 - `GET /carts` - 카트 목록 조회
 - `GET /carts/:id` - 카트 상세 조회
 - `POST /carts` - 카트 생성
@@ -77,6 +82,7 @@ async getGolfCourses() {
 **파일**: `src/lib/services/mapService.ts`
 
 **필요한 엔드포인트**:
+
 - `GET /maps` - 맵 목록 조회
 - `GET /maps/:id` - 맵 상세 조회
 - `POST /maps` - 맵 생성
@@ -88,6 +94,7 @@ async getGolfCourses() {
 ## 📝 API 연동 체크리스트
 
 ### 골프장 관리
+
 - [ ] `GET /golf-courses` 엔드포인트 연결
 - [ ] `POST /golf-courses` 엔드포인트 연결
 - [ ] `PUT /golf-courses/:id` 엔드포인트 연결
@@ -97,6 +104,7 @@ async getGolfCourses() {
 - [ ] 지도 위치 선택 API 연결
 
 ### 카트 관리
+
 - [ ] `GET /carts` 엔드포인트 연결
 - [ ] `POST /carts` 엔드포인트 연결
 - [ ] `PUT /carts/:id` 엔드포인트 연결
@@ -105,6 +113,7 @@ async getGolfCourses() {
 - [ ] 실시간 배터리/위치 추적 API 연결
 
 ### 맵 관리
+
 - [ ] `GET /maps` 엔드포인트 연결
 - [ ] `POST /maps` 엔드포인트 연결
 - [ ] `PUT /maps/:id` 엔드포인트 연결

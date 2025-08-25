@@ -119,7 +119,9 @@
 									class="h-5 w-5 {isActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}"
 								/>
 								{#if isOpen}
-									<span class="font-medium">{item.label}</span>
+									<span class="font-medium {isActive
+										? 'text-blue-600 dark:text-blue-300'
+										: 'text-gray-700 dark:text-gray-200'}">{item.label}</span>
 								{/if}
 							</a>
 						{/if}

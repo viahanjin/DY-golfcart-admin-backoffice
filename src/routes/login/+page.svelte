@@ -28,7 +28,7 @@
 
 	// 인증 스토어 상태
 	$: authState = $authStore;
-	
+
 	// 에러 메시지 관리
 	let serverError = '';
 	$: serverEmail = $page.form?.email || '';
@@ -75,10 +75,10 @@
 	// API 로그인 처리
 	const handleApiLogin = async () => {
 		if (!isFormValid || isFormLoading) return;
-		
+
 		isLoading = true;
 		const result = await authStore.login(formData.user_id, formData.password);
-		
+
 		if (result.success) {
 			goto('/dashboard');
 		} else {

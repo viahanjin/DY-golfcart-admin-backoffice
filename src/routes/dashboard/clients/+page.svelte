@@ -235,147 +235,149 @@
 			</div>
 		{/if}
 
-			<div class="space-y-6">
-		<!-- Stats Cards -->
-		<StatsCards {stats} />
+		<div class="space-y-6">
+			<!-- Stats Cards -->
+			<StatsCards {stats} />
 
+			<!-- Filter Bar -->
+			<FilterBar
+				bind:searchValue={storeState.searchQuery}
+				searchPlaceholder="고객사명, 코드, 주소 검색..."
+				createLabel="고객사 추가"
+				selectedCount={currentSelectedCount}
+				{loading}
+				on:search={(e) => golfCourseStore.search(e.detail)}
+				on:refresh={() => golfCourseStore.loadGolfCourses()}
+				on:create={handleCreate}
+				on:export={handleExport}
+				on:bulkDelete={() => (showBulkDeleteDialog = true)}
+			>
+				<svelte:fragment slot="filters">
+					<select
+						value={storeState.selectedStatus}
+						on:change={(e) =>
+							golfCourseStore.changeFilter(
+								e.currentTarget.value as 'all' | 'active' | 'inactive' | 'maintenance'
+							)}
+						class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+					>
+						<option value="all">전체 상태</option>
+						<option value="active">활성 계약</option>
+						<option value="maintenance">영업 진행</option>
+						<option value="inactive">계약 종료</option>
+					</select>
+				</svelte:fragment>
+			</FilterBar>
 
-		<!-- Filter Bar -->
-		<FilterBar
-			bind:searchValue={storeState.searchQuery}
-			searchPlaceholder="고객사명, 코드, 주소 검색..."
-			createLabel="고객사 추가"
-			selectedCount={currentSelectedCount}
-			{loading}
-			on:search={(e) => golfCourseStore.search(e.detail)}
-			on:refresh={() => golfCourseStore.loadGolfCourses()}
-			on:create={handleCreate}
-			on:export={handleExport}
-			on:bulkDelete={() => (showBulkDeleteDialog = true)}
-		>
-			<svelte:fragment slot="filters">
-				<select
-					value={storeState.selectedStatus}
-					on:change={(e) =>
-						golfCourseStore.changeFilter(
-							e.currentTarget.value as 'all' | 'active' | 'inactive' | 'maintenance'
-						)}
-					class="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+			<!-- Data Table -->
+			<DataTable
+				items={storeState.items}
+				{columns}
+				idKey="id"
+				{loading}
+				selectedItems={storeState.selectedItems}
+				sortBy={storeState.sortBy}
+				sortOrder={storeState.sortOrder}
+				page={storeState.page}
+				totalPages={storeState.totalPages}
+				totalItems={storeState.total}
+				on:sort={(e) => golfCourseStore.changeSort(e.detail)}
+				on:select={(e) => golfCourseStore.toggleSelection(String(e.detail))}
+				on:selectAll={golfCourseStore.toggleSelectAll}
+				on:pageChange={(e) => golfCourseStore.changePage(e.detail)}
+			>
+				<div
+					slot="empty-state"
+					class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400"
 				>
-					<option value="all">전체 상태</option>
-					<option value="active">활성 계약</option>
-					<option value="maintenance">영업 진행</option>
-					<option value="inactive">계약 종료</option>
-				</select>
-			</svelte:fragment>
-		</FilterBar>
-
-		<!-- Data Table -->
-		<DataTable
-			items={storeState.items}
-			{columns}
-			idKey="id"
-			{loading}
-			selectedItems={storeState.selectedItems}
-			sortBy={storeState.sortBy}
-			sortOrder={storeState.sortOrder}
-			page={storeState.page}
-			totalPages={storeState.totalPages}
-			totalItems={storeState.total}
-			on:sort={(e) => golfCourseStore.changeSort(e.detail)}
-			on:select={(e) => golfCourseStore.toggleSelection(String(e.detail))}
-			on:selectAll={golfCourseStore.toggleSelectAll}
-			on:pageChange={(e) => golfCourseStore.changePage(e.detail)}
-		>
-			<div slot="empty-state" class="flex h-64 flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-				<Building2 class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-				<p class="text-lg font-medium">등록된 고객사가 없습니다</p>
-				<p class="mt-1 text-sm">새로운 고객사를 추가해주세요.</p>
-			</div>
-
-		<svelte:fragment slot="cell-address" let:item>
-			{#if item.address && typeof item.address === 'object'}
-				{@const fullAddress =
-					`${item.address.address1 || ''} ${item.address.address2 || ''}`.trim()}
-				<div class="group relative">
-					<span class="block truncate text-gray-900 dark:text-gray-200">
-						{fullAddress || '-'}
-					</span>
-					{#if fullAddress && fullAddress.length > 30}
-						<div
-							class="absolute top-full left-0 z-50 mt-1 hidden w-max max-w-xs rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg group-hover:block dark:bg-gray-700"
-						>
-							{fullAddress}
-							<div
-								class="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"
-							></div>
-						</div>
-					{/if}
+					<Building2 class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+					<p class="text-lg font-medium">등록된 고객사가 없습니다</p>
+					<p class="mt-1 text-sm">새로운 고객사를 추가해주세요.</p>
 				</div>
-			{:else if item.address}
-				<div class="group relative">
-					<span class="block truncate text-gray-900 dark:text-gray-200">
-						{item.address}
-					</span>
-					{#if item.address.length > 30}
-						<div
-							class="absolute top-full left-0 z-50 mt-1 hidden w-max max-w-xs rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg group-hover:block dark:bg-gray-700"
-						>
-							{item.address}
-							<div
-								class="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"
-							></div>
+
+				<svelte:fragment slot="cell-address" let:item>
+					{#if item.address && typeof item.address === 'object'}
+						{@const fullAddress =
+							`${item.address.address1 || ''} ${item.address.address2 || ''}`.trim()}
+						<div class="group relative">
+							<span class="block truncate text-gray-900 dark:text-gray-200">
+								{fullAddress || '-'}
+							</span>
+							{#if fullAddress && fullAddress.length > 30}
+								<div
+									class="absolute top-full left-0 z-50 mt-1 hidden w-max max-w-xs rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg group-hover:block dark:bg-gray-700"
+								>
+									{fullAddress}
+									<div
+										class="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"
+									></div>
+								</div>
+							{/if}
 						</div>
+					{:else if item.address}
+						<div class="group relative">
+							<span class="block truncate text-gray-900 dark:text-gray-200">
+								{item.address}
+							</span>
+							{#if item.address.length > 30}
+								<div
+									class="absolute top-full left-0 z-50 mt-1 hidden w-max max-w-xs rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg group-hover:block dark:bg-gray-700"
+								>
+									{item.address}
+									<div
+										class="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-gray-900 dark:bg-gray-700"
+									></div>
+								</div>
+							{/if}
+						</div>
+					{:else}
+						<span class="text-gray-900 dark:text-gray-200">-</span>
 					{/if}
-				</div>
-			{:else}
-				<span class="text-gray-900 dark:text-gray-200">-</span>
-			{/if}
-		</svelte:fragment>
+				</svelte:fragment>
 
-		<svelte:fragment slot="cell-totalCarts" let:item>
-			<span class="text-center font-medium dark:text-gray-200">{item.totalCarts || 0} 대</span>
-		</svelte:fragment>
+				<svelte:fragment slot="cell-totalCarts" let:item>
+					<span class="text-center font-medium dark:text-gray-200">{item.totalCarts || 0} 대</span>
+				</svelte:fragment>
 
-		<svelte:fragment slot="cell-status" let:item>
-			{@const status = getStatusInfo(item.status)}
-			<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
-				{status.text}
-			</span>
-		</svelte:fragment>
+				<svelte:fragment slot="cell-status" let:item>
+					{@const status = getStatusInfo(item.status)}
+					<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {status.color}">
+						{status.text}
+					</span>
+				</svelte:fragment>
 
-		<svelte:fragment slot="cell-lastModified" let:item>
-			<span class="text-gray-900 dark:text-gray-200">
-				{formatDate(item.lastModified)}
-			</span>
-		</svelte:fragment>
+				<svelte:fragment slot="cell-lastModified" let:item>
+					<span class="text-gray-900 dark:text-gray-200">
+						{formatDate(item.lastModified)}
+					</span>
+				</svelte:fragment>
 
-		<svelte:fragment slot="cell-actions" let:item>
-			<div class="flex items-center justify-center gap-1">
-				<button
-					on:click={() => handleView(item)}
-					class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700"
-					title="상세보기"
-				>
-					<Eye class="h-4 w-4" />
-				</button>
-				<button
-					on:click={() => handleEdit(item)}
-					class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700"
-					title="수정"
-				>
-					<Edit class="h-4 w-4" />
-				</button>
-				<button
-					on:click={() => handleDelete(item)}
-					class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700"
-					title="삭제"
-				>
-					<Trash2 class="h-4 w-4" />
-				</button>
-			</div>
-			</svelte:fragment>
-		</DataTable>
+				<svelte:fragment slot="cell-actions" let:item>
+					<div class="flex items-center justify-center gap-1">
+						<button
+							on:click={() => handleView(item)}
+							class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-700"
+							title="상세보기"
+						>
+							<Eye class="h-4 w-4" />
+						</button>
+						<button
+							on:click={() => handleEdit(item)}
+							class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700"
+							title="수정"
+						>
+							<Edit class="h-4 w-4" />
+						</button>
+						<button
+							on:click={() => handleDelete(item)}
+							class="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700"
+							title="삭제"
+						>
+							<Trash2 class="h-4 w-4" />
+						</button>
+					</div>
+				</svelte:fragment>
+			</DataTable>
 		</div>
 	</div>
 {/if}

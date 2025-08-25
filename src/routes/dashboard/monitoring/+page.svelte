@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import GoogleMap from '$lib/components/map/GoogleMap.svelte';
-	import { 
-		Radio, 
-		Car, 
-		Activity, 
-		AlertCircle, 
-		Battery, 
-		Wifi, 
+	import {
+		Radio,
+		Car,
+		Activity,
+		AlertCircle,
+		Battery,
+		Wifi,
 		Navigation,
 		RefreshCw,
 		MapPin,
@@ -18,7 +18,7 @@
 	let carts = [
 		{
 			id: 'CART-001',
-			position: { lat: 37.5665, lng: 126.9780 },
+			position: { lat: 37.5665, lng: 126.978 },
 			title: 'CART-001',
 			status: 'active',
 			speed: 15,
@@ -28,8 +28,8 @@
 			info: '정상 운행중'
 		},
 		{
-			id: 'CART-002', 
-			position: { lat: 37.5705, lng: 126.9820 },
+			id: 'CART-002',
+			position: { lat: 37.5705, lng: 126.982 },
 			title: 'CART-002',
 			status: 'idle',
 			speed: 0,
@@ -40,7 +40,7 @@
 		},
 		{
 			id: 'CART-003',
-			position: { lat: 37.5625, lng: 126.9740 },
+			position: { lat: 37.5625, lng: 126.974 },
 			title: 'CART-003',
 			status: 'warning',
 			speed: 5,
@@ -51,7 +51,7 @@
 		},
 		{
 			id: 'CART-004',
-			position: { lat: 37.5685, lng: 126.9850 },
+			position: { lat: 37.5685, lng: 126.985 },
 			title: 'CART-004',
 			status: 'active',
 			speed: 18,
@@ -62,7 +62,7 @@
 		},
 		{
 			id: 'CART-005',
-			position: { lat: 37.5645, lng: 126.9710 },
+			position: { lat: 37.5645, lng: 126.971 },
 			title: 'CART-005',
 			status: 'maintenance',
 			speed: 0,
@@ -74,10 +74,10 @@
 	];
 
 	// 선택된 카트
-	let selectedCart: typeof carts[0] | null = null;
+	let selectedCart: (typeof carts)[0] | null = null;
 
 	// 지도 중심 및 줌 레벨
-	let mapCenter = { lat: 37.5665, lng: 126.9780 };
+	let mapCenter = { lat: 37.5665, lng: 126.978 };
 	let mapZoom = 14;
 
 	// 자동 새로고침
@@ -87,14 +87,14 @@
 	// 통계 데이터
 	$: stats = {
 		total: carts.length,
-		active: carts.filter(c => c.status === 'active').length,
-		idle: carts.filter(c => c.status === 'idle').length,
-		warning: carts.filter(c => c.status === 'warning').length,
-		maintenance: carts.filter(c => c.status === 'maintenance').length
+		active: carts.filter((c) => c.status === 'active').length,
+		idle: carts.filter((c) => c.status === 'idle').length,
+		warning: carts.filter((c) => c.status === 'warning').length,
+		maintenance: carts.filter((c) => c.status === 'maintenance').length
 	};
 
 	// 마커 데이터 변환
-	$: mapMarkers = carts.map(cart => ({
+	$: mapMarkers = carts.map((cart) => ({
 		id: cart.id,
 		position: cart.position,
 		title: cart.title,
@@ -104,36 +104,51 @@
 
 	function getCartIcon(status: string) {
 		// 실제로는 SVG 아이콘 경로를 반환
-		switch(status) {
-			case 'active': return '/cart-active.svg';
-			case 'idle': return '/cart-idle.svg';
-			case 'warning': return '/cart-warning.svg';
-			case 'maintenance': return '/cart-maintenance.svg';
-			default: return '/cart-default.svg';
+		switch (status) {
+			case 'active':
+				return '/cart-active.svg';
+			case 'idle':
+				return '/cart-idle.svg';
+			case 'warning':
+				return '/cart-warning.svg';
+			case 'maintenance':
+				return '/cart-maintenance.svg';
+			default:
+				return '/cart-default.svg';
 		}
 	}
 
 	function getStatusColor(status: string) {
-		switch(status) {
-			case 'active': return 'text-green-600 bg-green-100';
-			case 'idle': return 'text-blue-600 bg-blue-100';
-			case 'warning': return 'text-yellow-600 bg-yellow-100';
-			case 'maintenance': return 'text-red-600 bg-red-100';
-			default: return 'text-gray-600 bg-gray-100';
+		switch (status) {
+			case 'active':
+				return 'text-green-600 bg-green-100';
+			case 'idle':
+				return 'text-blue-600 bg-blue-100';
+			case 'warning':
+				return 'text-yellow-600 bg-yellow-100';
+			case 'maintenance':
+				return 'text-red-600 bg-red-100';
+			default:
+				return 'text-gray-600 bg-gray-100';
 		}
 	}
 
 	function getStatusText(status: string) {
-		switch(status) {
-			case 'active': return '운행중';
-			case 'idle': return '대기중';
-			case 'warning': return '경고';
-			case 'maintenance': return '정비중';
-			default: return '알 수 없음';
+		switch (status) {
+			case 'active':
+				return '운행중';
+			case 'idle':
+				return '대기중';
+			case 'warning':
+				return '경고';
+			case 'maintenance':
+				return '정비중';
+			default:
+				return '알 수 없음';
 		}
 	}
 
-	function selectCart(cart: typeof carts[0]) {
+	function selectCart(cart: (typeof carts)[0]) {
 		selectedCart = cart;
 		mapCenter = cart.position;
 		mapZoom = 16;
@@ -167,18 +182,16 @@
 	<div class="mb-4 flex items-center justify-between">
 		<div>
 			<h1 class="text-2xl font-bold text-gray-900 dark:text-white">실시간 카트 모니터링</h1>
-			<p class="text-sm text-gray-600 dark:text-gray-400">납품된 카트의 실시간 위치 및 상태를 모니터링합니다</p>
+			<p class="text-sm text-gray-600 dark:text-gray-400">
+				납품된 카트의 실시간 위치 및 상태를 모니터링합니다
+			</p>
 		</div>
 		<div class="flex items-center gap-2">
 			<label class="flex items-center gap-2">
-				<input 
-					type="checkbox" 
-					bind:checked={autoRefresh}
-					class="rounded border-gray-300"
-				/>
+				<input type="checkbox" bind:checked={autoRefresh} class="rounded border-gray-300" />
 				<span class="text-sm text-gray-700 dark:text-gray-300">자동 새로고침</span>
 			</label>
-			<button 
+			<button
 				on:click={refreshData}
 				class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
 			>
@@ -241,7 +254,7 @@
 	<div class="flex flex-1 gap-4 overflow-hidden">
 		<!-- 지도 영역 -->
 		<div class="flex-1 rounded-lg bg-white shadow dark:bg-gray-800">
-			<GoogleMap 
+			<GoogleMap
 				center={mapCenter}
 				zoom={mapZoom}
 				height="100%"
@@ -259,7 +272,10 @@
 				{#each carts as cart}
 					<button
 						on:click={() => selectCart(cart)}
-						class="w-full p-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 {selectedCart?.id === cart.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}"
+						class="w-full p-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 {selectedCart?.id ===
+						cart.id
+							? 'bg-blue-50 dark:bg-blue-900/20'
+							: ''}"
 					>
 						<div class="flex items-start justify-between">
 							<div>
@@ -276,7 +292,7 @@
 							<div class="text-right">
 								<div class="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
 									<Battery class="h-4 w-4" />
-									<span class="{cart.battery < 30 ? 'text-red-600' : ''}">{cart.battery}%</span>
+									<span class={cart.battery < 30 ? 'text-red-600' : ''}>{cart.battery}%</span>
 								</div>
 								<div class="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
 									<Gauge class="h-4 w-4" />
@@ -288,7 +304,11 @@
 							<div class="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
 								<div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
 									<MapPin class="h-4 w-4" />
-									<span>위도: {cart.position.lat.toFixed(4)}, 경도: {cart.position.lng.toFixed(4)}</span>
+									<span
+										>위도: {cart.position.lat.toFixed(4)}, 경도: {cart.position.lng.toFixed(
+											4
+										)}</span
+									>
 								</div>
 								<div class="mt-1 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
 									<Wifi class="h-4 w-4" />

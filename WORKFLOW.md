@@ -213,12 +213,14 @@ git remote prune origin
 ## 체크리스트
 
 ### Staging 배포 전
+
 - [ ] 모든 기능 브랜치가 dev에 머지됨
 - [ ] dev 브랜치에서 테스트 완료
 - [ ] 코드 리뷰 완료
 - [ ] 단위 테스트 통과
 
 ### Production 배포 전
+
 - [ ] Staging 환경에서 QA 완료
 - [ ] 성능 테스트 완료
 - [ ] 보안 점검 완료
