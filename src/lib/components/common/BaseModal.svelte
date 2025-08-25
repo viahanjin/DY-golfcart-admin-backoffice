@@ -24,10 +24,12 @@
 
 	onMount(() => {
 		window.addEventListener('keydown', handleKeydown);
+		document.body.style.overflow = 'hidden';
 	});
 
 	onDestroy(() => {
 		window.removeEventListener('keydown', handleKeydown);
+		document.body.style.overflow = '';
 	});
 
 	const sizeClasses = {
@@ -49,9 +51,10 @@
 >
 	<div
 		on:click|stopPropagation
-		class="max-h-[90vh] w-full {sizeClasses[size]} flex flex-col overflow-hidden rounded-lg bg-white dark:bg-gray-800"
+		class="max-h-[90vh] w-full {sizeClasses[size]} flex flex-col overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-gray-800 border border-gray-200 dark:border-gray-600"
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
 	>
 		<!-- Header -->
 		<div class="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4 sm:p-6 dark:border-gray-700">

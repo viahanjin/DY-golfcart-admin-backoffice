@@ -2,8 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { cartStore, isLoading, errorMessage, selectedCount } from '$lib/stores/cart.store';
 	import type { Cart } from '$lib/types/cart';
-	import type { StatItem } from '$lib/components/common/StatsCards.svelte';
-	import type { ColumnDefinition } from '$lib/components/common/DataTable.svelte';
+	import type { StatItem, ColumnDefinition } from '$lib/types/common';
 
 	// Component Imports
 	import StatsCards from '$lib/components/common/StatsCards.svelte';
@@ -13,7 +12,7 @@
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 
 	// Icon Imports
-	import { Car, CheckCircle, AlertTriangle, XCircle, Eye, Edit, Trash2, AlertCircle, X } from 'lucide-svelte';
+	import { Car, CheckCircle, AlertTriangle, Eye, Edit, Trash2, AlertCircle, X } from 'lucide-svelte';
 
 	// --- Store and State ---
 	let storeState: any;
@@ -53,19 +52,19 @@
 	// --- Component Props ---
 	$: stats = storeState ? ([
 		{ label: '전체 카트', value: storeState.total, icon: Car, color: 'text-blue-500' },
-		{ label: '운행 가능', value: storeState.items.filter((c:Cart) => c.cartStatus.currentState === 'available').length, icon: CheckCircle, color: 'text-green-500' },
-		{ label: '정비 중', value: storeState.items.filter((c:Cart) => c.cartStatus.currentState === 'maintenance').length, icon: AlertTriangle, color: 'text-yellow-500' },
-		{ label: '고장', value: storeState.items.filter((c:Cart) => c.cartStatus.currentState === 'broken').length, icon: XCircle, color: 'text-red-500' }
+		{ label: '운행 가능', value: storeState.items.filter((c:Cart) => c.status === 'AVAILABLE').length, icon: CheckCircle, color: 'text-green-500' },
+		{ label: '정비 중', value: storeState.items.filter((c:Cart) => c.status === 'MAINTENANCE').length, icon: AlertTriangle, color: 'text-yellow-500' },
+		{ label: '사용 중', value: storeState.items.filter((c:Cart) => c.status === 'IN_USE').length, icon: Car, color: 'text-blue-500' }
 	] as StatItem[]) : [];
 
 	const columns: ColumnDefinition<Cart>[] = [
 		{ key: 'select', label: 'Select', class: 'w-12' },
 		{ key: 'id', label: '카트 ID', sortable: true },
-		{ key: 'cartName', label: '카트명', sortable: true },
-		{ key: 'assignedGolfCourseId', label: '할당 골프장' },
-		{ key: 'cartStatus.currentState', label: '상태', sortable: true, class: 'text-center' },
-		{ key: 'capabilities.battery.capacity', label: '배터리', class: 'text-center' },
-		{ key: 'cartStatus.lastInspection', label: '최근 점검' },
+		{ key: 'cartNumber', label: '카트 번호', sortable: true },
+		{ key: 'golfCourseName', label: '할당 골프장' },
+		{ key: 'status', label: '상태', sortable: true, class: 'text-center' },
+		{ key: 'batteryLevel', label: '배터리 (%)', class: 'text-center' },
+		{ key: 'lastMaintenance', label: '최근 점검' },
 		{ key: 'actions', label: '액션', class: 'w-24 text-center' }
 	];
 
@@ -97,9 +96,11 @@
 		const { mode, data } = event.detail;
 		let success = false;
 		if (mode === 'create') {
-			success = await cartStore.createCart(data);
+			const response = await cartStore.createCart(data);
+			success = response.success;
 		} else if (mode === 'edit' && selectedCart) {
-			success = await cartStore.updateCart(selectedCart.id, data);
+			const response = await cartStore.updateCart(selectedCart.id, data);
+			success = response.success;
 		}
 		if (success) {
 			showModal = false;
@@ -122,10 +123,11 @@
 	// --- Helper Functions ---
 	function getStatusInfo(status: string) {
 		switch (status) {
-			case 'available': return { color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/50', text: '운행 가능' };
-			case 'maintenance': return { color: 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/50', text: '정비 중' };
-			case 'broken': return { color: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/50', text: '고장' };
-			default: return { color: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700', text: '미사용' };
+			case 'AVAILABLE': return { color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/50', text: '운행 가능' };
+			case 'IN_USE': return { color: 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/50', text: '사용 중' };
+			case 'CHARGING': return { color: 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/50', text: '충전 중' };
+			case 'MAINTENANCE': return { color: 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/50', text: '정비 중' };
+			default: return { color: 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700', text: '알 수 없음' };
 		}
 	}
 </script>
