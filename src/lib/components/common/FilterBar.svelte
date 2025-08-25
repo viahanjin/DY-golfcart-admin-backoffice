@@ -25,12 +25,12 @@
 </script>
 
 <div
-	class="mb-4 flex flex-col gap-4 rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:flex-row sm:items-center sm:justify-between"
+	class="mb-4 flex flex-row items-center justify-between gap-3 rounded-lg bg-white p-4 shadow dark:bg-gray-800"
 >
 	<!-- Left side: Search and Filters -->
-	<div class="flex flex-1 items-center gap-2">
+	<div class="flex items-center gap-3">
 		<!-- Search -->
-		<div class="relative flex-1 sm:max-w-xs">
+		<div class="relative w-64">
 			<Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 			<input
 				type="text"
